@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/peterh/liner"
-	"github.com/y0ssar1an/q"
 )
 
 func (g gen) F(l *liner.State, fields []string) error {
@@ -19,18 +18,19 @@ func (g gen) F(l *liner.State, fields []string) error {
 		}
 
 		orderedDepts := orderDepts()
-		// orderedPeople := orderPeople()
+        orderedPeople := orderPeople()
 
-		getOrderByDept(orderedDepts, teamSize)
+		stringTeams, teamNumber := getOrderByDept(orderedDepts, teamSize)
 
-		// var teams []Team
+		teams := make([]Team, teamNumber)
 
-		// for i := 0; i < teamNumber; i++ {
-		// 	team := Team{
-		// 		Score: 0,
-		// 	}
-		// 	teams := append(teams, team)
-		// }
+		for i := 0; i < len(stringTeams); i++ {
+            firstMember := orderedPeople[0]
+            secondMember := findMatch(firstMember)
+			team := Team{
+                Members: 
+            }
+		}
 
 	}
 
@@ -38,7 +38,11 @@ func (g gen) F(l *liner.State, fields []string) error {
 
 }
 
-func getOrderByDept(orderedDepts []Department, teamSize int) {
+func findMatch(person Person) {
+    
+}
+
+func getOrderByDept(orderedDepts []Department, teamSize int) ([][]string, int) {
 	var teamOrg []string
 
 	for _, d := range orderedDepts {
@@ -54,15 +58,10 @@ func getOrderByDept(orderedDepts []Department, teamSize int) {
 		teamSlice[i] = make([]string, teamSize)
 	}
 
-	q.Q(len(teamOrg))
-	q.Q(teamSize)
-	q.Q(teamNumber)
-
 	var j = 0
 	for k := 0; k < teamSize; k++ {
 		for i := 0; i < teamNumber; i++ {
 			if j < len(teamOrg) {
-				q.Q(k, i, j)
 				teamSlice[i][k] = teamOrg[j]
 				j++
 			}
@@ -70,6 +69,8 @@ func getOrderByDept(orderedDepts []Department, teamSize int) {
 	}
 
 	fmt.Println(teamSlice)
+
+	return teamSlice, teamNumber
 
 }
 
@@ -90,7 +91,7 @@ func orderPeople() []Person {
 		slice = append(slice, k)
 	}
 
-	sort.Sort(slice)
+	sort.Sort(sort.Reverse(slice))
 
 	return slice
 }
