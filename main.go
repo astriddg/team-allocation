@@ -14,8 +14,8 @@ import (
 var (
 	people      = map[string]Person{}
 	departments = map[string]Department{}
-	teams       = map[string]Team{}
-	matches     = map[string]Match{}
+	teams       = []Team{}
+	matches     = []Match{}
 	l           *liner.State
 	cmds        = map[string]Command{
 		"add":    add{},
@@ -33,6 +33,8 @@ var fileNames = map[string]string{
 }
 
 func init() {
+
+	// Retrieve all the "tables"
 	err := getList(fileNames["people"], &people)
 	if err != nil {
 		fmt.Println(err)
@@ -77,7 +79,7 @@ func main() {
 
 	var lastExit = false
 	for {
-		cmd, err := l.Prompt("Who are you?")
+		cmd, err := l.Prompt("What do you want to do?  --  ")
 
 		if err != nil && err.Error() == "EOF" {
 			fmt.Println("bye!")
@@ -98,6 +100,7 @@ func main() {
 			continue
 		}
 
+		// Execute each command
 		err = execute(l, cmd)
 		if err != nil {
 			fmt.Println(err)
@@ -128,6 +131,7 @@ func execute(l *liner.State, cmd string) error {
 
 }
 
+// Opens the right file and reads the bytes into a struct
 func getList(source string, v interface{}) error {
 	file, err := os.OpenFile(source, os.O_CREATE|os.O_RDWR, 0777)
 	defer file.Close()

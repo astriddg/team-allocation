@@ -12,19 +12,24 @@ import (
 func (g gen) F(l *liner.State, fields []string) error {
 
 	if len(fields) == 2 {
-		teamSiZe, err := strconv.Atoi(fields[1])
+		teamSize, err := strconv.Atoi(fields[1])
 		if err != nil {
 			return err
 		}
 
-		TotalNbPeople := getNumberPeople()
-
-		teamNumber := int64(math.Ceil(float64(TotalNbPeople) / float64(teamSiZe)))
-
 		orderedDepts := orderDepts()
-		orderedPeople := orderPeople
+		orderedPeople := orderPeople()
+
+		getOrderByDept(orderedDepts, teamSize)
 
 		var teams []Team
+
+		for i := 0; i < teamNumber; i++ {
+			team := Team{
+				Score: 0,
+			}
+			teams := append(teams, team)
+		}
 
 	}
 
@@ -32,14 +37,18 @@ func (g gen) F(l *liner.State, fields []string) error {
 
 }
 
-func getNumberPeople() int {
-	var totalNumber int
+func getOrderByDept(orderedDepts []Department, teamSize int) {
+	var teamOrg []string
+	var teamSlice [][]string
 
-	for _, k := range departments {
-		totalNumber += k.NumberPeople
+	for _, d := range orderedDepts {
+		for i := 0; i < d.NumberPeople; i++ {
+			teamOrg = append(teamOrg, d.Name)
+		}
 	}
 
-	return totalNumber
+	teamNumber := int(math.Ceil(float64(len(teamOrg)) / float64(teamSize)))
+
 }
 
 func orderDepts() []Department {
@@ -48,7 +57,7 @@ func orderDepts() []Department {
 		slice = append(slice, k)
 	}
 
-	sort.Sort(slice)
+	sort.Sort(sort.Reverse(slice))
 
 	return slice
 }

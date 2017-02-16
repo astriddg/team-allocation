@@ -13,7 +13,7 @@ func (s show) F(l *liner.State, fields []string) error {
 		case "people":
 			fmt.Println(people)
 			return nil
-		case "department":
+		case "departments":
 			fmt.Println(departments)
 			return nil
 		default:

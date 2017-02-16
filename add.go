@@ -9,32 +9,43 @@ import (
 func (a add) F(l *liner.State, fields []string) error {
 
 	if fields[1] == "department" {
+
 		if len(fields) < 3 {
 			fmt.Errorf("Have you forgotten to add a department name?")
+
 		} else if len(fields) > 3 {
 			fmt.Errorf("Too many arguments!")
+
 		} else {
+			// Add a new department
 			dept, err := addDepartment(fields[2])
 			if err != nil {
 				fmt.Println(err)
 			}
+
 			fmt.Println(dept)
 			return nil
 		}
+
 	} else if fields[1] == "person" {
+
 		if len(fields) < 4 {
 			fmt.Errorf("Have you forgotten to add a person or department name?")
+
 		} else if len(fields) > 4 {
 			fmt.Errorf("Too many arguments!")
+
 		} else {
 			pers, err := addPerson(fields[2], fields[3])
 			if err != nil {
 				fmt.Println(err)
 			}
+
 			fmt.Println(pers)
 		}
+
 	} else {
-		fmt.Errorf("Looks like you've got the wrong arguments here")
+		fmt.Println("Looks like you've got the wrong arguments here")
 	}
 	return nil
 }
@@ -47,7 +58,7 @@ func addDepartment(deptName string) (string, error) {
 		}
 		departments[deptName] = dept
 
-		err := persistDeptAndPers()
+		err := persistLoad()
 		if err != nil {
 			return "", err
 		}
@@ -66,13 +77,16 @@ func addPerson(persName string, deptName string) (string, error) {
 				Department: deptName,
 				Score:      0,
 			}
+
 			people[persName] = pers
 
 			dept.NumberPeople++
 
 			departments[deptName] = dept
 
-			err := persistDeptAndPers()
+			addToMatches(pers)
+
+			err := persistLoad()
 			if err != nil {
 				return "", err
 			}

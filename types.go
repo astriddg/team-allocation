@@ -17,9 +17,8 @@ type Team struct {
 }
 
 type Match struct {
-	MatchName [2]string
-	Match     [2]Person
-	Score     int
+	Match [2]Person
+	Score int
 }
 
 type Departments []Department

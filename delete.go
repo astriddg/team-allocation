@@ -52,7 +52,7 @@ func delDepartment(deptName string) (string, error) {
 		// then deleting department
 		delete(departments, deptName)
 
-		err := persistDeptAndPers()
+		err := persistLoad()
 		if err != nil {
 			return "", err
 		}
@@ -76,7 +76,7 @@ func delPerson(persName string) (string, error) {
 		dept.NumberPeople--
 		departments[deptName] = dept
 
-		err := persistDeptAndPers()
+		err := persistLoad()
 		if err != nil {
 			return "", err
 		}
