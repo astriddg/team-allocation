@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/peterh/liner"
+	"github.com/y0ssar1an/q"
 )
 
 func (g gen) F(l *liner.State, fields []string) error {
@@ -18,18 +19,18 @@ func (g gen) F(l *liner.State, fields []string) error {
 		}
 
 		orderedDepts := orderDepts()
-		orderedPeople := orderPeople()
+		// orderedPeople := orderPeople()
 
 		getOrderByDept(orderedDepts, teamSize)
 
-		var teams []Team
+		// var teams []Team
 
-		for i := 0; i < teamNumber; i++ {
-			team := Team{
-				Score: 0,
-			}
-			teams := append(teams, team)
-		}
+		// for i := 0; i < teamNumber; i++ {
+		// 	team := Team{
+		// 		Score: 0,
+		// 	}
+		// 	teams := append(teams, team)
+		// }
 
 	}
 
@@ -39,7 +40,6 @@ func (g gen) F(l *liner.State, fields []string) error {
 
 func getOrderByDept(orderedDepts []Department, teamSize int) {
 	var teamOrg []string
-	var teamSlice [][]string
 
 	for _, d := range orderedDepts {
 		for i := 0; i < d.NumberPeople; i++ {
@@ -48,6 +48,28 @@ func getOrderByDept(orderedDepts []Department, teamSize int) {
 	}
 
 	teamNumber := int(math.Ceil(float64(len(teamOrg)) / float64(teamSize)))
+
+	teamSlice := make([][]string, teamNumber)
+	for i := range teamSlice {
+		teamSlice[i] = make([]string, teamSize)
+	}
+
+	q.Q(len(teamOrg))
+	q.Q(teamSize)
+	q.Q(teamNumber)
+
+	var j = 0
+	for k := 0; k < teamSize; k++ {
+		for i := 0; i < teamNumber; i++ {
+			if j < len(teamOrg) {
+				q.Q(k, i, j)
+				teamSlice[i][k] = teamOrg[j]
+				j++
+			}
+		}
+	}
+
+	fmt.Println(teamSlice)
 
 }
 
