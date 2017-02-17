@@ -65,11 +65,12 @@ func delDepartment(deptName string) (string, error) {
 }
 
 func delPerson(persName string) (string, error) {
-	if _, ok := people[persName]; ok {
+	if pers, ok := people[persName]; ok {
 
 		deptName := people[persName].Department
 
 		delete(people, persName)
+		delFromMatches(pers)
 
 		// reduce number of people
 		dept := departments[deptName]

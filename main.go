@@ -15,7 +15,7 @@ var (
 	people      = map[string]Person{}
 	departments = map[string]Department{}
 	teams       = []Team{}
-	matches     = []Match{}
+	matches     Matches
 	l           *liner.State
 	cmds        = map[string]Command{
 		"add":    add{},

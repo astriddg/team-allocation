@@ -19,6 +19,7 @@ func addToMatches(person Person) {
 				} else {
 					match.Score = 0
 				}
+				matches = append(matches, match)
 			}
 		}
 	}
