@@ -17,21 +17,26 @@ func (g gen) F(l *liner.State, fields []string) error {
 			return err
 		}
 
-		orderedDepts := orderDepts()
 		orderedPeople := orderPeople()
 		sort.Sort(sort.Reverse(matches))
 
-		stringTeams, teamNumber := getTeamNumber(orderedDepts, teamSize)
+		teamNumber := int(math.Ceil(float64(len(orderedPeople)) / float64(teamSize)))
 
 		teams := make([]Team, teamNumber)
 
-		for i := 0; i < len(stringTeams); i++ {
+		for i := 0; i < teamNumber; i++ {
 			selected := []Person{orderedPeople[0]}
 			orderedPeople = orderedPeople[1:]
 			// teamScore := 0
 			for j := 1; j < teamSize; j++ {
-				next, int := getMatchingPerson(selected, orderedPeople)
-				selected = append(selected, next)
+				next, index, err := getMatchingPerson(selected, orderedPeople)
+				if err != nil {
+					fmt.Println(err)
+				}
+				if err == nil {
+					selected = append(selected, next)
+					orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
+				}
 
 				// teamScore := next.Score
 			}
@@ -43,12 +48,14 @@ func (g gen) F(l *liner.State, fields []string) error {
 
 		fmt.Println(teams)
 
-	} else {
-		return fmt.Errorf("Wrong number of arguments!")
+		return nil
+
 	}
+	return fmt.Errorf("Wrong number of arguments!")
+
 }
 
-func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int) {
+func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, error) {
 	var leaderboard Leaderboard
 	for k, p := range orderedPeople {
 		if personNotSelected(array, p) {
@@ -67,55 +74,13 @@ func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int) {
 		}
 	}
 	sort.Sort(sort.Reverse(leaderboard))
-	if len(leaderboard != 0) {
-		return leaderboard[0].Person, leaderboard[0].Index
+	if len(leaderboard) != 0 {
+		return leaderboard[0].Person, leaderboard[0].Index, nil
 	} else {
-		return nil, nil
+		nothing := Person{}
+		return nothing, 0, fmt.Errorf("No more leaders here!")
 	}
 
-}
-
-func getOrderByDept(orderedDepts []Department, teamSize int) ([][]string, int) {
-	var teamOrg []string
-
-	for _, d := range orderedDepts {
-		for i := 0; i < d.NumberPeople; i++ {
-			teamOrg = append(teamOrg, d.Name)
-		}
-	}
-
-	teamNumber := int(math.Ceil(float64(len(teamOrg)) / float64(teamSize)))
-
-	teamSlice := make([][]string, teamNumber)
-	for i := range teamSlice {
-		teamSlice[i] = make([]string, teamSize)
-	}
-
-	var j = 0
-	for k := 0; k < teamSize; k++ {
-		for i := 0; i < teamNumber; i++ {
-			if j < len(teamOrg) {
-				teamSlice[i][k] = teamOrg[j]
-				j++
-			}
-		}
-	}
-
-	fmt.Println(teamSlice)
-
-	return teamSlice, teamNumber
-
-}
-
-func orderDepts() []Department {
-	var slice Departments
-	for _, k := range departments {
-		slice = append(slice, k)
-	}
-
-	sort.Sort(sort.Reverse(slice))
-
-	return slice
 }
 
 func orderPeople() []Person {
@@ -154,4 +119,5 @@ func doesMatch(match Match, array []Person, p Person) bool {
 			}
 		}
 	}
+	return false
 }
