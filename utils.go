@@ -60,3 +60,7 @@ func persistLoad() error {
 
 	return nil
 }
+
+func persistTeams(teams) {
+    for _. 
+}

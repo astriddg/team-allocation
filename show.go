@@ -16,6 +16,9 @@ func (s show) F(l *liner.State, fields []string) error {
 		case "departments":
 			fmt.Println(departments)
 			return nil
+		case "matches":
+			fmt.Println(matches)
+			return nil
 		default:
 			return fmt.Errorf("That's not a listable type..")
 		}

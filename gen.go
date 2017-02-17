@@ -24,29 +24,64 @@ func (g gen) F(l *liner.State, fields []string) error {
 
 		teams := make([]Team, teamNumber)
 
-		for i := 0; i < teamNumber; i++ {
-			selected := []Person{orderedPeople[0]}
-			orderedPeople = orderedPeople[1:]
-			// teamScore := 0
-			for j := 1; j < teamSize; j++ {
-				next, index, err := getMatchingPerson(selected, orderedPeople)
-				if err != nil {
-					fmt.Println(err)
+		for i := 0; i < teamSize; i++ {
+			for j := 0; j < teamNumber; j++ {
+				if i == 0 {
+					teams[j] = Team{
+						Members: []Person{orderedPeople[0]},
+					}
+					orderedPeople = orderedPeople[1:]
+				} else {
+					next, index, err := getMatchingPerson(teams[j].Members, orderedPeople)
+					if err != nil {
+						fmt.Println(err)
+					}
+					if err == nil {
+						teams[j].Members = append(teams[j].Members, next)
+						orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
+					}
 				}
-				if err == nil {
-					selected = append(selected, next)
-					orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
-				}
-
-				// teamScore := next.Score
-			}
-			teams[i] = Team{
-				Members: selected,
-				// TODO: add the per-team score
 			}
 		}
 
-		fmt.Println(teams)
+		fmt.Println("Here are the teams as generated, do you like them?")
+		for _, v := range teams {
+			fmt.Println(v.Members)
+			fmt.Println(" ")
+		}
+
+		check, err := l.Prompt("Do you like them? Shall I persist them?")
+		if err != nil {
+			fmt.Errorf("something went wrong here: %v", err)
+		}
+		if check == "yes" || check == "YES" || check == "Yes" || check == "yess" || check == "yes!" {
+			persistTeams(teams)
+			fmt.Println("thanks!")
+		}
+
+		// for i := 0; i < teamNumber; i++ {
+		// 	selected := []Person{orderedPeople[0]}
+		// 	orderedPeople = orderedPeople[1:]
+		// 	// teamScore := 0
+		// 	for j := 1; j < teamSize; j++ {
+		// 		next, index, err := getMatchingPerson(selected, orderedPeople)
+		// 		if err != nil {
+		// 			fmt.Println(err)
+		// 		}
+		// 		if err == nil {
+		// 			selected = append(selected, next)
+		// 			orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
+		// 		}
+
+		// 		// teamScore := next.Score
+		// 	}
+		// 	teams[i] = Team{
+		// 		Members: selected,
+		// 		// TODO: add the per-team score
+		// 	}
+		// }
+
+		// fmt.Println(teams)
 
 		return nil
 

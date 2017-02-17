@@ -40,17 +40,21 @@ func (d del) F(l *liner.State, fields []string) error {
 }
 
 func delDepartment(deptName string) (string, error) {
-	if _, ok := departments[deptName]; ok {
+	if departmentExists(deptName) {
 
 		// deleting first anyone from that department
 		for k, v := range people {
-			if v.Department == departments[deptName].Name {
-				delete(people, k)
+			if v.Department == deptName {
+				people = append(people[:k], people[k+1:]...)
 			}
 		}
 
 		// then deleting department
-		delete(departments, deptName)
+		for k, d := range departments {
+			if d.Name == deptName {
+				departments = append(departments[:k], departments[k+1:]...)
+			}
+		}
 
 		err := persistLoad()
 		if err != nil {

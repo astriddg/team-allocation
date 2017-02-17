@@ -51,12 +51,12 @@ func (a add) F(l *liner.State, fields []string) error {
 }
 
 func addDepartment(deptName string) (string, error) {
-	if _, ok := departments[deptName]; !ok {
+	if !departmentExists(deptName) {
 		dept := Department{
 			Name:         deptName,
 			NumberPeople: 0,
 		}
-		departments[deptName] = dept
+		departments = append(departments, dept)
 
 		err := persistLoad()
 		if err != nil {
@@ -70,15 +70,17 @@ func addDepartment(deptName string) (string, error) {
 }
 
 func addPerson(persName string, deptName string) (string, error) {
-	if _, ok := people[persName]; !ok {
-		if dept, ok := departments[deptName]; ok {
+	if !personExists(persName) {
+		if departmentExists(deptName) {
 			pers := Person{
 				Name:       persName,
 				Department: deptName,
 				Score:      0,
 			}
 
-			people[persName] = pers
+			people = append(people, pers)
+
+			dept = getDept(deptName)
 
 			dept.NumberPeople++
 
@@ -99,4 +101,30 @@ func addPerson(persName string, deptName string) (string, error) {
 	} else {
 		return "", fmt.Errorf("This person exists already.")
 	}
+}
+
+func departmentExists(name string) bool {
+	for _, dept := range departments {
+		if dept.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func getDept(name string) *Department {
+	for _, dept := range departments {
+		if dept.Name == name {
+			return &dept
+		}
+	}
+}
+
+func personExists(name string) bool {
+	for _, pers := range people {
+		if pers.Name == name {
+			return true
+		}
+	}
+	return false
 }
