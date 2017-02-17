@@ -69,17 +69,17 @@ func delDepartment(deptName string) (string, error) {
 }
 
 func delPerson(persName string) (string, error) {
-	if pers, ok := people[persName]; ok {
+	if personExists(persName) {
 
-		deptName := people[persName].Department
+		for k, p := range people {
+			if p.Name == persName {
+				dept := getDept(p.Department)
+				dept.NumberPeople--
+				people = append(people[:k], people[k+1:]...)
+				delFromMatches(p)
 
-		delete(people, persName)
-		delFromMatches(pers)
-
-		// reduce number of people
-		dept := departments[deptName]
-		dept.NumberPeople--
-		departments[deptName] = dept
+			}
+		}
 
 		err := persistLoad()
 		if err != nil {

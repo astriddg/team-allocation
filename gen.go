@@ -55,7 +55,6 @@ func (g gen) F(l *liner.State, fields []string) error {
 			fmt.Errorf("something went wrong here: %v", err)
 		}
 		if check == "yes" || check == "YES" || check == "Yes" || check == "yess" || check == "yes!" {
-			persistTeams(teams)
 			fmt.Println("thanks!")
 		}
 

@@ -80,11 +80,9 @@ func addPerson(persName string, deptName string) (string, error) {
 
 			people = append(people, pers)
 
-			dept = getDept(deptName)
+			dept := getDept(deptName)
 
 			dept.NumberPeople++
-
-			departments[deptName] = dept
 
 			addToMatches(pers)
 
@@ -110,14 +108,6 @@ func departmentExists(name string) bool {
 		}
 	}
 	return false
-}
-
-func getDept(name string) *Department {
-	for _, dept := range departments {
-		if dept.Name == name {
-			return &dept
-		}
-	}
 }
 
 func personExists(name string) bool {

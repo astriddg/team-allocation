@@ -61,6 +61,39 @@ func persistLoad() error {
 	return nil
 }
 
-func persistTeams(teams) {
-    for _. 
+func persistTeams(teams []Team) {
+	for _, t := range teams {
+		l := len(t.Members) - 1
+		for i := 0; i < l; i++ {
+			for j := 0; j < l-i; j++ {
+				firstPers := getPers(t.Members[i].Name)
+				secondPers := getPers(t.Members[j].Name)
+				if t.Members[i].Department == t.Members[j].Department {
+					firstPers.Score += 2
+					secondPers.Score += 2
+				} else {
+					firstPers.Score++
+					secondPers.Score++
+				}
+			}
+		}
+	}
+}
+
+func getDept(name string) *Department {
+	for i := 0; i < len(departments); i++ {
+		if departments[i].Name == name {
+			return &departments[i]
+		}
+	}
+	return &Department{}
+}
+
+func getPers(name string) *Person {
+	for i := 0; i < len(people); i++ {
+		if people[i].Name == name {
+			return &people[i]
+		}
+	}
+	return &Person{}
 }

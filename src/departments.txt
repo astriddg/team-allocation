@@ -1,1 +1,1 @@
-{"one":{"Name":"one","NumberPeople":6},"three":{"Name":"three","NumberPeople":3},"two":{"Name":"two","NumberPeople":4}}
+[{"Name":"one","NumberPeople":6},{"Name":"two","NumberPeople":4},{"Name":"three","NumberPeople":3},{"Name":"four","NumberPeople":2}]
