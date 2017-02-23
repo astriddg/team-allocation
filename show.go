@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/peterh/liner"
 )
@@ -17,7 +18,7 @@ func (s show) F(l *liner.State, fields []string) error {
 			fmt.Println(departments)
 			return nil
 		case "matches":
-			fmt.Println(matches)
+			showMatches()
 			return nil
 		default:
 			return fmt.Errorf("That's not a listable type..")
@@ -27,4 +28,19 @@ func (s show) F(l *liner.State, fields []string) error {
 
 	return fmt.Errorf("Wrong number of arguments!")
 
+}
+
+func showMatches() {
+	copy := matches
+	sort.Sort(sort.Reverse(copy))
+	fmt.Println(" ")
+	for _, m := range copy {
+		fmt.Print(m.Match[0].Name)
+		fmt.Print(" ")
+		fmt.Print(m.Match[1].Name)
+		fmt.Print(" ")
+		fmt.Print(m.Score)
+		fmt.Println(" ")
+
+	}
 }

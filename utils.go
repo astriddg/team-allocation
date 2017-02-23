@@ -7,20 +7,18 @@ import (
 )
 
 func addToMatches(person Person) {
-	if len(matches) != 0 {
-		for _, p := range people {
-			var match Match
-			if p != person {
-				match = Match{
-					Match: [2]Person{p, person},
-				}
-				if p.Department == person.Department {
-					match.Score = 5
-				} else {
-					match.Score = 0
-				}
-				matches = append(matches, match)
+	for _, p := range people {
+		var match Match
+		if p.Name != person.Name {
+			match = Match{
+				Match: [2]Person{p, person},
 			}
+			if p.Department == person.Department {
+				match.Score = 5
+			} else {
+				match.Score = 0
+			}
+			matches = append(matches, match)
 		}
 	}
 }
@@ -29,7 +27,11 @@ func delFromMatches(person Person) {
 	if len(matches) != 0 {
 		for k, m := range matches {
 			if m.Match[0] == person || m.Match[1] == person {
-				matches = append(matches[0:k], matches[k+1:]...)
+				if k < len(matches) {
+					matches = append(matches[0:k], matches[k+1:]...)
+				} else {
+					matches = matches[0:k]
+				}
 			}
 		}
 	}
@@ -63,21 +65,27 @@ func persistLoad() error {
 
 func persistTeams(teams []Team) {
 	for _, t := range teams {
-		l := len(t.Members) - 1
-		for i := 0; i < l; i++ {
-			for j := 0; j < l-i; j++ {
+		l := len(t.Members)
+		for i := 0; i < l-1; i++ {
+			for j := i + 1; j < l; j++ {
 				firstPers := getPers(t.Members[i].Name)
 				secondPers := getPers(t.Members[j].Name)
+				match := getMatch(t.Members[i].Name, t.Members[j].Name)
 				if t.Members[i].Department == t.Members[j].Department {
 					firstPers.Score += 2
 					secondPers.Score += 2
+					match.Score += 2
 				} else {
 					firstPers.Score++
 					secondPers.Score++
+					match.Score++
 				}
+
 			}
 		}
 	}
+
+	persistLoad()
 }
 
 func getDept(name string) *Department {
@@ -96,4 +104,14 @@ func getPers(name string) *Person {
 		}
 	}
 	return &Person{}
+}
+
+func getMatch(firstName string, secondName string) *Match {
+	for i := 0; i < len(matches); i++ {
+		if (matches[i].Match[0].Name == firstName && matches[i].Match[1].Name == secondName) ||
+			(matches[i].Match[1].Name == firstName && matches[i].Match[0].Name == secondName) {
+			return &matches[i]
+		}
+	}
+	return &Match{}
 }

@@ -17,70 +17,69 @@ func (g gen) F(l *liner.State, fields []string) error {
 			return err
 		}
 
+		// Get a slice of all the people in the order of the person with the highest score first
 		orderedPeople := orderPeople()
 		sort.Sort(sort.Reverse(matches))
 
+		// Get the number of teams by dividing the number of people by team size.
 		teamNumber := int(math.Ceil(float64(len(orderedPeople)) / float64(teamSize)))
 
 		teams := make([]Team, teamNumber)
 
+		// We're iterating per team then per row, such that all first lines of teams are filled
+		// before the second lines are.
 		for i := 0; i < teamSize; i++ {
 			for j := 0; j < teamNumber; j++ {
 				if i == 0 {
+					// If we're in the first row, we need to create the team first, and we put in the person with the higest
+					// score.
 					teams[j] = Team{
 						Members: []Person{orderedPeople[0]},
 					}
 					orderedPeople = orderedPeople[1:]
 				} else {
-					next, index, err := getMatchingPerson(teams[j].Members, orderedPeople)
+					// In subsequent rows, we implement the logic to get matching teammates.
+					next, index, nextScore, err := getMatchingPerson(teams[j].Members, orderedPeople)
 					if err != nil {
 						fmt.Println(err)
 					}
 					if err == nil {
 						teams[j].Members = append(teams[j].Members, next)
+						teams[j].Score += nextScore
 						orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
 					}
 				}
 			}
 		}
 
-		fmt.Println("Here are the teams as generated, do you like them?")
+		fmt.Println(" ")
+		fmt.Println(" ")
+		fmt.Println(" ")
+		fmt.Println(" ")
+		fmt.Println(" ")
+		fmt.Println("Here are the teams as generated, do you like them? ")
+		fmt.Println(" ")
 		for _, v := range teams {
-			fmt.Println(v.Members)
 			fmt.Println(" ")
-		}
+			fmt.Print("[ ")
+			for _, m := range v.Members {
+				fmt.Print(m.Name)
+				fmt.Print("  ")
+			}
+			fmt.Print("] ")
+			fmt.Print(v.Score)
+			fmt.Println(" ")
 
-		check, err := l.Prompt("Do you like them? Shall I persist them?")
+		}
+		fmt.Println(" ")
+		check, err := l.Prompt("Do you like them? Shall I persist them? ")
 		if err != nil {
 			fmt.Errorf("something went wrong here: %v", err)
 		}
 		if check == "yes" || check == "YES" || check == "Yes" || check == "yess" || check == "yes!" {
 			fmt.Println("thanks!")
+			persistTeams(teams)
 		}
-
-		// for i := 0; i < teamNumber; i++ {
-		// 	selected := []Person{orderedPeople[0]}
-		// 	orderedPeople = orderedPeople[1:]
-		// 	// teamScore := 0
-		// 	for j := 1; j < teamSize; j++ {
-		// 		next, index, err := getMatchingPerson(selected, orderedPeople)
-		// 		if err != nil {
-		// 			fmt.Println(err)
-		// 		}
-		// 		if err == nil {
-		// 			selected = append(selected, next)
-		// 			orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
-		// 		}
-
-		// 		// teamScore := next.Score
-		// 	}
-		// 	teams[i] = Team{
-		// 		Members: selected,
-		// 		// TODO: add the per-team score
-		// 	}
-		// }
-
-		// fmt.Println(teams)
 
 		return nil
 
@@ -89,14 +88,19 @@ func (g gen) F(l *liner.State, fields []string) error {
 
 }
 
-func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, error) {
+func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int, error) {
 	var leaderboard Leaderboard
 	for k, p := range orderedPeople {
 		if personNotSelected(array, p) {
 			var personTotal int
 			for _, m := range matches {
 				if doesMatch(m, array, p) {
-					personTotal += m.Score
+					personTotal = m.Score
+					if m.Match[0].Department == m.Match[0].Department {
+						personTotal += 2
+					} else {
+						personTotal++
+					}
 				}
 			}
 			leader := Leader{
@@ -107,12 +111,12 @@ func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, err
 			leaderboard = append(leaderboard, leader)
 		}
 	}
-	sort.Sort(sort.Reverse(leaderboard))
+	sort.Sort(leaderboard)
 	if len(leaderboard) != 0 {
-		return leaderboard[0].Person, leaderboard[0].Index, nil
+		return leaderboard[0].Person, leaderboard[0].Index, leaderboard[0].TotalScore, nil
 	} else {
 		nothing := Person{}
-		return nothing, 0, fmt.Errorf("No more leaders here!")
+		return nothing, 0, 0, fmt.Errorf("No more leaders here!")
 	}
 
 }
@@ -138,17 +142,17 @@ func personNotSelected(array []Person, p Person) bool {
 }
 
 func doesMatch(match Match, array []Person, p Person) bool {
-	if match.Match[0] == p {
+	if match.Match[0].Name == p.Name {
 		for _, person := range array {
-			if match.Match[1] == person {
+			if match.Match[1].Name == person.Name {
 				return true
 			}
 		}
 	}
 
-	if match.Match[1] == p {
+	if match.Match[1].Name == p.Name {
 		for _, person := range array {
-			if match.Match[0] == person {
+			if match.Match[0].Name == person.Name {
 				return true
 			}
 		}

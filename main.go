@@ -25,10 +25,10 @@ var (
 	}
 )
 
+// List of files to source
 var fileNames = map[string]string{
 	"people":      "src/people.txt",
 	"departments": "src/departments.txt",
-	"teams":       "src/teams.txt",
 	"matches":     "src/matches.txt",
 }
 
@@ -41,11 +41,6 @@ func init() {
 	}
 
 	err = getList(fileNames["departments"], &departments)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	err = getList(fileNames["teams"], &teams)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -113,6 +108,7 @@ func main() {
 }
 
 func execute(l *liner.State, cmd string) error {
+	// Turn command string to slice
 	fields := strings.Fields(cmd)
 	firstarg := fields[0]
 
@@ -120,8 +116,10 @@ func execute(l *liner.State, cmd string) error {
 		return fmt.Errorf("Oops, command doesn't exist")
 	}
 
+	// retrieve command
 	command := cmds[firstarg]
 
+	// send to the right function
 	err := command.F(l, fields)
 	if err != nil {
 		return err

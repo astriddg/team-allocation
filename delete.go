@@ -14,6 +14,7 @@ func (d del) F(l *liner.State, fields []string) error {
 		} else if len(fields) > 3 {
 			fmt.Errorf("Too many arguments!")
 		} else {
+			// Delete department
 			dept, err := delDepartment(fields[2])
 			if err != nil {
 				fmt.Println(err)
@@ -27,6 +28,7 @@ func (d del) F(l *liner.State, fields []string) error {
 		} else if len(fields) > 3 {
 			fmt.Errorf("Too many arguments!")
 		} else {
+			// Delete person
 			pers, err := delPerson(fields[2])
 			if err != nil {
 				fmt.Println(err)
@@ -73,9 +75,11 @@ func delPerson(persName string) (string, error) {
 
 		for k, p := range people {
 			if p.Name == persName {
+				// Reduce the number of people in that department
 				dept := getDept(p.Department)
 				dept.NumberPeople--
 				people = append(people[:k], people[k+1:]...)
+				// The person also has to be deleted from the matches list.
 				delFromMatches(p)
 
 			}

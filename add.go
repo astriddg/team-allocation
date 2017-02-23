@@ -36,6 +36,7 @@ func (a add) F(l *liner.State, fields []string) error {
 			fmt.Errorf("Too many arguments!")
 
 		} else {
+			// Add a new person
 			pers, err := addPerson(fields[2], fields[3])
 			if err != nil {
 				fmt.Println(err)
@@ -51,13 +52,17 @@ func (a add) F(l *liner.State, fields []string) error {
 }
 
 func addDepartment(deptName string) (string, error) {
+
 	if !departmentExists(deptName) {
+		// Create department
 		dept := Department{
 			Name:         deptName,
 			NumberPeople: 0,
 		}
+		// Add to the list
 		departments = append(departments, dept)
 
+		// then persist the whole thing
 		err := persistLoad()
 		if err != nil {
 			return "", err
@@ -84,8 +89,10 @@ func addPerson(persName string, deptName string) (string, error) {
 
 			dept.NumberPeople++
 
+			// You want a "match" to be created between this new person and all of the others.
 			addToMatches(pers)
 
+			// Save it all
 			err := persistLoad()
 			if err != nil {
 				return "", err
