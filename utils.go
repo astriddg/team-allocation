@@ -6,18 +6,22 @@ import (
 	"os"
 )
 
-func addToMatches(person Person) {
-	for _, p := range people {
+func addToMatches(person *Person) {
+	for i, _ := range people {
 		var match Match
+		p := people[i]
 		if p.Name != person.Name {
 			match = Match{
-				Match: [2]Person{p, person},
+				Match: [2]Person{p, *person},
 			}
 			if p.Department == person.Department {
 				match.Score = 5
 			} else {
 				match.Score = 0
 			}
+			people[i].Score = p.Score + match.Score
+			person.Score = person.Score + match.Score
+
 			matches = append(matches, match)
 		}
 	}

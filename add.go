@@ -6,7 +6,7 @@ import (
 	"github.com/peterh/liner"
 )
 
-func (a add) F(l *liner.State, fields []string) error {
+func (a add) Action(line *liner.State, fields []string) error {
 
 	if fields[1] == "department" {
 
@@ -18,12 +18,11 @@ func (a add) F(l *liner.State, fields []string) error {
 
 		} else {
 			// Add a new department
-			dept, err := addDepartment(fields[2])
+			_, err := addDepartment(fields[2])
 			if err != nil {
 				fmt.Println(err)
 			}
 
-			fmt.Println(dept)
 			return nil
 		}
 
@@ -37,12 +36,11 @@ func (a add) F(l *liner.State, fields []string) error {
 
 		} else {
 			// Add a new person
-			pers, err := addPerson(fields[2], fields[3])
+			_, err := addPerson(fields[2], fields[3])
 			if err != nil {
 				fmt.Println(err)
 			}
 
-			fmt.Println(pers)
 		}
 
 	} else {
@@ -83,15 +81,15 @@ func addPerson(persName string, deptName string) (string, error) {
 				Score:      0,
 			}
 
-			people = append(people, pers)
-
 			dept := getDept(deptName)
 
 			dept.NumberPeople++
 
 			// You want a "match" to be created between this new person and all of the others.
-			addToMatches(pers)
+			addToMatches(&pers)
+			people = append(people, pers)
 
+			fmt.Println(pers)
 			// Save it all
 			err := persistLoad()
 			if err != nil {

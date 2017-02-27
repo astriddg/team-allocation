@@ -9,7 +9,7 @@ import (
 	"github.com/peterh/liner"
 )
 
-func (g gen) F(l *liner.State, fields []string) error {
+func (g gen) Action(line *liner.State, fields []string) error {
 
 	if len(fields) == 2 {
 		teamSize, err := strconv.Atoi(fields[1])
@@ -40,7 +40,7 @@ func (g gen) F(l *liner.State, fields []string) error {
 				} else {
 					// In subsequent rows, we implement the logic to get matching teammates.
 					next, index, nextScore, err := getMatchingPerson(teams[j].Members, orderedPeople)
-					if err != nil {
+					if err != nil && err.Error() != "No more leaders here!" {
 						fmt.Println(err)
 					}
 					if err == nil {
@@ -72,7 +72,7 @@ func (g gen) F(l *liner.State, fields []string) error {
 
 		}
 		fmt.Println(" ")
-		check, err := l.Prompt("Do you like them? Shall I persist them? ")
+		check, err := line.Prompt("Do you like them? Shall I persist them? ")
 		if err != nil {
 			fmt.Errorf("something went wrong here: %v", err)
 		}

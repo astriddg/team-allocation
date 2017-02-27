@@ -7,7 +7,7 @@ import (
 	"github.com/peterh/liner"
 )
 
-func (s show) F(l *liner.State, fields []string) error {
+func (s show) Action(line *liner.State, fields []string) error {
 
 	if len(fields) == 2 {
 		switch fields[1] {

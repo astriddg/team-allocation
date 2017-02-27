@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 
 	"github.com/peterh/liner"
@@ -16,13 +18,15 @@ var (
 	departments = []Department{}
 	teams       = []Team{}
 	matches     Matches
-	l           *liner.State
+	line        *liner.State
 	cmds        = map[string]Command{
 		"add":    add{},
 		"delete": del{},
 		"show":   show{},
 		"gen":    gen{},
+		"help":   help{},
 	}
+	history_fn = filepath.Join(os.TempDir(), ".liner_example_history")
 )
 
 // List of files to source
@@ -31,6 +35,8 @@ var fileNames = map[string]string{
 	"departments": "src/departments.txt",
 	"matches":     "src/matches.txt",
 }
+
+var words = []string{"add", "delete", "show", "gen", "person", "department", "people", "departments", "help"}
 
 func init() {
 
@@ -50,14 +56,28 @@ func init() {
 		fmt.Println(err)
 	}
 
-	l = liner.NewLiner()
+	line = liner.NewLiner()
 
-	l.SetCtrlCAborts(true)
+	line.SetCompleter(func(line string) (c []string) {
+		for _, n := range words {
+			if strings.HasPrefix(n, strings.ToLower(line)) {
+				c = append(c, n)
+			}
+		}
+		return
+	})
+
+	if f, err := os.Open(history_fn); err == nil {
+		line.ReadHistory(f)
+		f.Close()
+	}
+
+	line.SetCtrlCAborts(true)
 
 }
 
 func main() {
-	defer l.Close()
+	defer line.Close()
 
 	quitCh := make(chan bool)
 	c := make(chan os.Signal, 1)
@@ -74,7 +94,7 @@ func main() {
 
 	var lastExit = false
 	for {
-		cmd, err := l.Prompt("What do you want to do?  --  ")
+		cmd, err := line.Prompt("What do you want to do?  --  ")
 
 		if err != nil && err.Error() == "EOF" {
 			fmt.Println("bye!")
@@ -96,9 +116,16 @@ func main() {
 		}
 
 		// Execute each command
-		err = execute(l, cmd)
+		err = execute(line, cmd)
 		if err != nil {
 			fmt.Println(err)
+		}
+
+		if f, err := os.Create(history_fn); err != nil {
+			log.Print("Error writing history file: ", err)
+		} else {
+			line.WriteHistory(f)
+			f.Close()
 		}
 
 		lastExit = false
@@ -107,7 +134,7 @@ func main() {
 
 }
 
-func execute(l *liner.State, cmd string) error {
+func execute(line *liner.State, cmd string) error {
 	// Turn command string to slice
 	fields := strings.Fields(cmd)
 	firstarg := fields[0]
@@ -120,7 +147,7 @@ func execute(l *liner.State, cmd string) error {
 	command := cmds[firstarg]
 
 	// send to the right function
-	err := command.F(l, fields)
+	err := command.Action(line, fields)
 	if err != nil {
 		return err
 	}
