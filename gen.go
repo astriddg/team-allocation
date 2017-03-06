@@ -17,40 +17,7 @@ func (g gen) Action(line *liner.State, fields []string) error {
 			return err
 		}
 
-		// Get a slice of all the people in the order of the person with the highest score first
-		orderedPeople := orderPeople()
-		sort.Sort(sort.Reverse(matches))
-
-		// Get the number of teams by dividing the number of people by team size.
-		teamNumber := int(math.Ceil(float64(len(orderedPeople)) / float64(teamSize)))
-
-		teams := make([]Team, teamNumber)
-
-		// We're iterating per team then per row, such that all first lines of teams are filled
-		// before the second lines are.
-		for i := 0; i < teamSize; i++ {
-			for j := 0; j < teamNumber; j++ {
-				if i == 0 {
-					// If we're in the first row, we need to create the team first, and we put in the person with the higest
-					// score.
-					teams[j] = Team{
-						Members: []Person{orderedPeople[0]},
-					}
-					orderedPeople = orderedPeople[1:]
-				} else {
-					// In subsequent rows, we implement the logic to get matching teammates.
-					next, index, nextScore, err := getMatchingPerson(teams[j].Members, orderedPeople)
-					if err != nil && err.Error() != "No more leaders here!" {
-						fmt.Println(err)
-					}
-					if err == nil {
-						teams[j].Members = append(teams[j].Members, next)
-						teams[j].Score += nextScore
-						orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
-					}
-				}
-			}
-		}
+		teams := getTeams(teamSize)
 
 		fmt.Println(" ")
 		fmt.Println(" ")
@@ -88,7 +55,46 @@ func (g gen) Action(line *liner.State, fields []string) error {
 
 }
 
-func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int, error) {
+func getTeams(teamSize int) []Team {
+	// Get a slice of all the people in the order of the person with the highest score first
+	orderedPeople := orderPeople()
+	sort.Sort(sort.Reverse(matches))
+
+	// Get the number of teams by dividing the number of people by team size.
+	teamNumber := int(math.Ceil(float64(len(orderedPeople)) / float64(teamSize)))
+
+	teams := make([]Team, teamNumber)
+
+	// We're iterating per team then per row, such that all first lines of teams are filled
+	// before the second lines are.
+	for i := 0; i < teamSize; i++ {
+		for j := 0; j < teamNumber; j++ {
+			if i == 0 {
+				// If we're in the first row, we need to create the team first, and we put in the person with the higest
+				// score.
+				teams[j] = Team{
+					Members: []*Person{orderedPeople[0]},
+				}
+				orderedPeople = orderedPeople[1:]
+			} else {
+				// In subsequent rows, we implement the logic to get matching teammates.
+				next, index, nextScore, err := getMatchingPerson(teams[j].Members, orderedPeople)
+				if err != nil && err.Error() != "No more leaders here!" {
+					fmt.Println(err)
+				}
+				if err == nil {
+					teams[j].Members = append(teams[j].Members, next)
+					teams[j].Score += nextScore
+					orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
+				}
+			}
+		}
+	}
+
+	return teams
+}
+
+func getMatchingPerson(array []*Person, orderedPeople []*Person) (*Person, int, int, error) {
 	var leaderboard Leaderboard
 	for k, p := range orderedPeople {
 		if personNotSelected(array, p) {
@@ -103,7 +109,7 @@ func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int
 					}
 				}
 			}
-			leader := Leader{
+			leader := &Leader{
 				Person:     p,
 				TotalScore: personTotal,
 				Index:      k,
@@ -115,13 +121,13 @@ func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int
 	if len(leaderboard) != 0 {
 		return leaderboard[0].Person, leaderboard[0].Index, leaderboard[0].TotalScore, nil
 	} else {
-		nothing := Person{}
+		nothing := &Person{}
 		return nothing, 0, 0, fmt.Errorf("No more leaders here!")
 	}
 
 }
 
-func orderPeople() []Person {
+func orderPeople() []*Person {
 	var slice People
 	for _, k := range people {
 		slice = append(slice, k)
@@ -132,7 +138,7 @@ func orderPeople() []Person {
 	return slice
 }
 
-func personNotSelected(array []Person, p Person) bool {
+func personNotSelected(array []*Person, p *Person) bool {
 	for _, person := range array {
 		if p == person {
 			return false
@@ -141,7 +147,7 @@ func personNotSelected(array []Person, p Person) bool {
 	return true
 }
 
-func doesMatch(match Match, array []Person, p Person) bool {
+func doesMatch(match *Match, array []*Person, p *Person) bool {
 	if match.Match[0].Name == p.Name {
 		for _, person := range array {
 			if match.Match[1].Name == person.Name {

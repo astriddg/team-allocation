@@ -8,7 +8,7 @@ import (
 
 func (a add) Action(line *liner.State, fields []string) error {
 
-	if fields[1] == "department" {
+	if fields[1] == "department" || fields[1] == "d" {
 
 		if len(fields) < 3 {
 			fmt.Errorf("Have you forgotten to add a department name?")
@@ -18,15 +18,17 @@ func (a add) Action(line *liner.State, fields []string) error {
 
 		} else {
 			// Add a new department
-			_, err := addDepartment(fields[2])
+			message, err := addDepartment(fields[2])
 			if err != nil {
 				fmt.Println(err)
 			}
 
+			fmt.Println(message)
+
 			return nil
 		}
 
-	} else if fields[1] == "person" {
+	} else if fields[1] == "person" || fields[1] == "p" {
 
 		if len(fields) < 4 {
 			fmt.Errorf("Have you forgotten to add a person or department name?")
@@ -36,10 +38,12 @@ func (a add) Action(line *liner.State, fields []string) error {
 
 		} else {
 			// Add a new person
-			_, err := addPerson(fields[2], fields[3])
+			message, err := addPerson(fields[2], fields[3])
 			if err != nil {
 				fmt.Println(err)
 			}
+
+			fmt.Println(message)
 
 		}
 
@@ -51,9 +55,9 @@ func (a add) Action(line *liner.State, fields []string) error {
 
 func addDepartment(deptName string) (string, error) {
 
-	if !departmentExists(deptName) {
+	if _, ok := departmentExists(deptName); !ok {
 		// Create department
-		dept := Department{
+		dept := &Department{
 			Name:         deptName,
 			NumberPeople: 0,
 		}
@@ -66,30 +70,28 @@ func addDepartment(deptName string) (string, error) {
 			return "", err
 		}
 
-		return fmt.Sprintf("The department %s has been successfully added", dept.Name), nil
+		return fmt.Sprintf("The department %s has been added successfully", dept.Name), nil
 	} else {
 		return "", fmt.Errorf("This department exists already.")
 	}
 }
 
 func addPerson(persName string, deptName string) (string, error) {
-	if !personExists(persName) {
-		if departmentExists(deptName) {
-			pers := Person{
+	if _, ok := personExists(persName); !ok {
+		if dept, ok := departmentExists(deptName); ok {
+			pers := &Person{
 				Name:       persName,
-				Department: deptName,
+				Department: dept,
 				Score:      0,
 			}
-
-			dept := getDept(deptName)
 
 			dept.NumberPeople++
 
 			// You want a "match" to be created between this new person and all of the others.
-			addToMatches(&pers)
+			addToMatches(pers)
 			people = append(people, pers)
 
-			fmt.Println(pers)
+			fmt.Println(&pers)
 			// Save it all
 			err := persistLoad()
 			if err != nil {
@@ -106,20 +108,20 @@ func addPerson(persName string, deptName string) (string, error) {
 	}
 }
 
-func departmentExists(name string) bool {
+func departmentExists(name string) (*Department, bool) {
 	for _, dept := range departments {
 		if dept.Name == name {
-			return true
+			return dept, true
 		}
 	}
-	return false
+	return &Department{}, false
 }
 
-func personExists(name string) bool {
+func personExists(name string) (*Person, bool) {
 	for _, pers := range people {
 		if pers.Name == name {
-			return true
+			return pers, true
 		}
 	}
-	return false
+	return &Person{}, false
 }

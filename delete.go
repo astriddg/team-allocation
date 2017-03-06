@@ -28,7 +28,7 @@ func (d del) Action(line *liner.State, fields []string) error {
 			fmt.Errorf("Too many arguments!")
 		} else {
 			// Delete person
-			_, err := delPerson(fields[2])
+			_, err := delPerson(fields[2], false)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -40,12 +40,13 @@ func (d del) Action(line *liner.State, fields []string) error {
 }
 
 func delDepartment(deptName string) (string, error) {
-	if departmentExists(deptName) {
+	if dept, ok := departmentExists(deptName); ok {
 
 		// deleting first anyone from that department
 		for _, v := range people {
-			if v.Department == deptName {
-				delPerson(v.Name)
+			if v.Department == dept {
+				// true: the department will be deleted
+				delPerson(v.Name, true)
 			}
 		}
 
@@ -68,14 +69,16 @@ func delDepartment(deptName string) (string, error) {
 	}
 }
 
-func delPerson(persName string) (string, error) {
-	if personExists(persName) {
+func delPerson(persName string, deleteDept bool) (string, error) {
+	if _, ok := personExists(persName); ok {
 
 		for k, p := range people {
 			if p.Name == persName {
 				// Reduce the number of people in that department
-				dept := getDept(p.Department)
-				dept.NumberPeople--
+				if !deleteDept {
+					p.Department.NumberPeople--
+				}
+
 				people = append(people[:k], people[k+1:]...)
 				// The person also has to be deleted from the matches list.
 				delFromMatches(p)

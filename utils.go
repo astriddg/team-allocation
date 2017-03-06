@@ -8,31 +8,31 @@ import (
 
 func addToMatches(person *Person) {
 	for i, _ := range people {
-		var match Match
 		p := people[i]
-		if p.Name != person.Name {
-			match = Match{
-				Match: [2]Person{p, *person},
-			}
-			if p.Department == person.Department {
-				match.Score = 5
-			} else {
-				match.Score = 0
-			}
-			people[i].Score = p.Score + match.Score
-			person.Score = person.Score + match.Score
-
-			matches = append(matches, match)
+		match := &Match{
+			Match: [2]*Person{p, person},
 		}
+		if p.Department == person.Department {
+			match.Score = 5
+		} else {
+			match.Score = 0
+		}
+		people[i].Score = p.Score + match.Score
+		person.Score = person.Score + match.Score
+
+		matches = append(matches, match)
+
 	}
 }
 
-func delFromMatches(person Person) {
+func delFromMatches(person *Person) {
 	if len(matches) != 0 {
 		for k, m := range matches {
+			// If the first or the second person in the match is the given person.
 			if m.Match[0] == person || m.Match[1] == person {
 				if k < len(matches) {
 					matches = append(matches[0:k], matches[k+1:]...)
+					// That's if the match is at the end.
 				} else {
 					matches = matches[0:k]
 				}
@@ -72,10 +72,10 @@ func persistTeams(teams []Team) {
 		l := len(t.Members)
 		for i := 0; i < l-1; i++ {
 			for j := i + 1; j < l; j++ {
-				firstPers := getPers(t.Members[i].Name)
-				secondPers := getPers(t.Members[j].Name)
-				match := getMatch(t.Members[i].Name, t.Members[j].Name)
-				if t.Members[i].Department == t.Members[j].Department {
+				firstPers := t.Members[i]
+				secondPers := t.Members[j]
+				match := getMatch(firstPers.Name, secondPers.Name)
+				if firstPers.Department == secondPers.Department {
 					firstPers.Score += 2
 					secondPers.Score += 2
 					match.Score += 2
@@ -92,29 +92,11 @@ func persistTeams(teams []Team) {
 	persistLoad()
 }
 
-func getDept(name string) *Department {
-	for i := 0; i < len(departments); i++ {
-		if departments[i].Name == name {
-			return &departments[i]
-		}
-	}
-	return &Department{}
-}
-
-func getPers(name string) *Person {
-	for i := 0; i < len(people); i++ {
-		if people[i].Name == name {
-			return &people[i]
-		}
-	}
-	return &Person{}
-}
-
 func getMatch(firstName string, secondName string) *Match {
 	for i := 0; i < len(matches); i++ {
 		if (matches[i].Match[0].Name == firstName && matches[i].Match[1].Name == secondName) ||
 			(matches[i].Match[1].Name == firstName && matches[i].Match[0].Name == secondName) {
-			return &matches[i]
+			return matches[i]
 		}
 	}
 	return &Match{}
