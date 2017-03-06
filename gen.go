@@ -17,40 +17,7 @@ func (g gen) Action(line *liner.State, fields []string) error {
 			return err
 		}
 
-		// Get a slice of all the people in the order of the person with the highest score first
-		orderedPeople := orderPeople()
-		sort.Sort(sort.Reverse(matches))
-
-		// Get the number of teams by dividing the number of people by team size.
-		teamNumber := int(math.Ceil(float64(len(orderedPeople)) / float64(teamSize)))
-
-		teams := make([]Team, teamNumber)
-
-		// We're iterating per team then per row, such that all first lines of teams are filled
-		// before the second lines are.
-		for i := 0; i < teamSize; i++ {
-			for j := 0; j < teamNumber; j++ {
-				if i == 0 {
-					// If we're in the first row, we need to create the team first, and we put in the person with the higest
-					// score.
-					teams[j] = Team{
-						Members: []Person{orderedPeople[0]},
-					}
-					orderedPeople = orderedPeople[1:]
-				} else {
-					// In subsequent rows, we implement the logic to get matching teammates.
-					next, index, nextScore, err := getMatchingPerson(teams[j].Members, orderedPeople)
-					if err != nil && err.Error() != "No more leaders here!" {
-						fmt.Println(err)
-					}
-					if err == nil {
-						teams[j].Members = append(teams[j].Members, next)
-						teams[j].Score += nextScore
-						orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
-					}
-				}
-			}
-		}
+		teams := getTeams(teamSize)
 
 		fmt.Println(" ")
 		fmt.Println(" ")
@@ -86,6 +53,45 @@ func (g gen) Action(line *liner.State, fields []string) error {
 	}
 	return fmt.Errorf("Wrong number of arguments!")
 
+}
+
+func getTeams(teamSize int) []Team {
+	// Get a slice of all the people in the order of the person with the highest score first
+	orderedPeople := orderPeople()
+	sort.Sort(sort.Reverse(matches))
+
+	// Get the number of teams by dividing the number of people by team size.
+	teamNumber := int(math.Ceil(float64(len(orderedPeople)) / float64(teamSize)))
+
+	teams := make([]Team, teamNumber)
+
+	// We're iterating per team then per row, such that all first lines of teams are filled
+	// before the second lines are.
+	for i := 0; i < teamSize; i++ {
+		for j := 0; j < teamNumber; j++ {
+			if i == 0 {
+				// If we're in the first row, we need to create the team first, and we put in the person with the higest
+				// score.
+				teams[j] = Team{
+					Members: []Person{orderedPeople[0]},
+				}
+				orderedPeople = orderedPeople[1:]
+			} else {
+				// In subsequent rows, we implement the logic to get matching teammates.
+				next, index, nextScore, err := getMatchingPerson(teams[j].Members, orderedPeople)
+				if err != nil && err.Error() != "No more leaders here!" {
+					fmt.Println(err)
+				}
+				if err == nil {
+					teams[j].Members = append(teams[j].Members, next)
+					teams[j].Score += nextScore
+					orderedPeople = append(orderedPeople[:index], orderedPeople[index+1:]...)
+				}
+			}
+		}
+	}
+
+	return teams
 }
 
 func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int, error) {
