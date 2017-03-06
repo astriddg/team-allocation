@@ -5,13 +5,10 @@ import (
 )
 
 func BenchmarkAddDepartment(b *testing.B) {
-	createData()
 
 	for n := 0; n < b.N; n++ {
 		addDepartment("test")
 	}
-
-	deleteData()
 }
 
 func BenchmarkAddPerson(b *testing.B) {
