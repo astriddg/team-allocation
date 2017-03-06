@@ -29,7 +29,7 @@ func delFromMatches(person *Person) {
 	if len(matches) != 0 {
 		for k, m := range matches {
 			// If the first or the second person in the match is the given person.
-			if m.Match[0] == person || m.Match[1] == person {
+			if m.Match[0].Name == person.Name || m.Match[1].Name == person.Name {
 				if k < len(matches) {
 					matches = append(matches[0:k], matches[k+1:]...)
 					// That's if the match is at the end.

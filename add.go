@@ -11,19 +11,19 @@ func (a add) Action(line *liner.State, fields []string) error {
 	if fields[1] == "department" || fields[1] == "d" {
 
 		if len(fields) < 3 {
-			fmt.Errorf("Have you forgotten to add a department name?")
+			return fmt.Errorf("Have you forgotten to add a department name?")
 
 		} else if len(fields) > 3 {
-			fmt.Errorf("Too many arguments!")
+			return fmt.Errorf("Too many arguments!")
 
 		} else {
 			// Add a new department
 			message, err := addDepartment(fields[2])
 			if err != nil {
 				fmt.Println(err)
+			} else {
+				fmt.Println(message)
 			}
-
-			fmt.Println(message)
 
 			return nil
 		}
@@ -31,19 +31,19 @@ func (a add) Action(line *liner.State, fields []string) error {
 	} else if fields[1] == "person" || fields[1] == "p" {
 
 		if len(fields) < 4 {
-			fmt.Errorf("Have you forgotten to add a person or department name?")
+			return fmt.Errorf("Have you forgotten to add a person or department name?")
 
 		} else if len(fields) > 4 {
-			fmt.Errorf("Too many arguments!")
+			return fmt.Errorf("Too many arguments!")
 
 		} else {
 			// Add a new person
 			message, err := addPerson(fields[2], fields[3])
 			if err != nil {
 				fmt.Println(err)
+			} else {
+				fmt.Println(message)
 			}
-
-			fmt.Println(message)
 
 		}
 

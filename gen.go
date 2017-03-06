@@ -41,7 +41,7 @@ func (g gen) Action(line *liner.State, fields []string) error {
 		fmt.Println(" ")
 		check, err := line.Prompt("Do you like them? Shall I persist them? ")
 		if err != nil {
-			fmt.Errorf("something went wrong here: %v", err)
+			return fmt.Errorf("something went wrong here: %v", err)
 		}
 		if check == "yes" || check == "YES" || check == "Yes" || check == "yess" || check == "yes!" {
 			fmt.Println("thanks!")
