@@ -29,15 +29,25 @@ func addToMatches(person *Person) {
 
 func delFromMatches(person Person) {
 	if len(matches) != 0 {
-		for k, m := range matches {
-			if m.Match[0] == person || m.Match[1] == person {
-				if k < len(matches) {
-					matches = append(matches[0:k], matches[k+1:]...)
-				} else {
-					matches = matches[0:k]
+		var delMatch Matches
+		for _, m := range matches {
+			// If the first or the second person in the match is the given person.
+			if m.Match[0].Name == person.Name || m.Match[1].Name == person.Name {
+				delMatch = append(delMatch, m)
+			}
+		}
+
+		for i := 0; i < len(matches); i++ {
+			match := matches[i]
+			for _, d := range delMatch {
+				if match == d {
+					matches = append(matches[:i], matches[i+1:]...)
+					i-- // Important: decrease index
+					break
 				}
 			}
 		}
+
 	}
 }
 
