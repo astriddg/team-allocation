@@ -12,46 +12,46 @@ func BenchmarkAddDepartment(b *testing.B) {
 }
 
 func BenchmarkAddPerson(b *testing.B) {
-	createData()
 
 	for n := 0; n < b.N; n++ {
+		createData()
 		addPerson("test", "foo")
+		deleteData()
 	}
 
-	deleteData()
 }
 
 func BenchmarkAddToMatches(b *testing.B) {
-	createData()
 
 	for n := 0; n < b.N; n++ {
+		createData()
 		addToMatches(&Person{
 			Name:       "hullo",
 			Department: "foo",
 		})
+		deleteData()
 	}
 
-	deleteData()
 }
 
 func BenchmarkPersistTeams(b *testing.B) {
-	teams := createData()
 
 	for n := 0; n < b.N; n++ {
+		teams := createData()
 		persistTeams(teams)
+		deleteData()
 	}
 
-	deleteData()
 }
 
 func BenchmarkGetTeams(b *testing.B) {
-	createData()
 
 	for n := 0; n < b.N; n++ {
+		createData()
 		getTeams(3)
+		deleteData()
 	}
 
-	deleteData()
 }
 
 func createData() []Team {
