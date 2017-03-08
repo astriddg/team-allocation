@@ -2,7 +2,7 @@ package main
 
 type Person struct {
 	Name       string
-	Department string
+	Department *Department
 	Score      int
 }
 
@@ -12,22 +12,22 @@ type Department struct {
 }
 
 type Team struct {
-	Members []Person
+	Members []*Person
 	Score   int
 }
 
 type Match struct {
-	Match [2]Person
+	Match [2]*Person
 	Score int
 }
 
 type Leader struct {
-	Person     Person
+	Person     *Person
 	TotalScore int
 	Index      int
 }
 
-type Departments []Department
+type Departments []*Department
 
 func (slice Departments) Len() int {
 	return len(slice)
@@ -41,7 +41,7 @@ func (slice Departments) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
-type People []Person
+type People []*Person
 
 func (slice People) Len() int {
 	return len(slice)
@@ -55,7 +55,7 @@ func (slice People) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
-type Matches []Match
+type Matches []*Match
 
 func (slice Matches) Len() int {
 	return len(slice)
@@ -69,7 +69,7 @@ func (slice Matches) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
-type Leaderboard []Leader
+type Leaderboard []*Leader
 
 func (slice Leaderboard) Len() int {
 	return len(slice)

@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	people      = []Person{}
-	departments = []Department{}
-	teams       = []Team{}
+	people      = People{}
+	departments = []*Department{}
+	teams       = []*Team{}
 	matches     Matches
 	line        *liner.State
 	cmds        = map[string]Command{

@@ -41,7 +41,7 @@ func (g gen) Action(line *liner.State, fields []string) error {
 		fmt.Println(" ")
 		check, err := line.Prompt("Do you like them? Shall I persist them? ")
 		if err != nil {
-			fmt.Errorf("something went wrong here: %v", err)
+			return fmt.Errorf("something went wrong here: %v", err)
 		}
 		if check == "yes" || check == "YES" || check == "Yes" || check == "yess" || check == "yes!" {
 			fmt.Println("thanks!")
@@ -109,7 +109,7 @@ func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int
 					}
 				}
 			}
-			leader := Leader{
+			leader := &Leader{
 				Person:     p,
 				TotalScore: personTotal,
 				Index:      k,
@@ -121,13 +121,13 @@ func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int
 	if len(leaderboard) != 0 {
 		return leaderboard[0].Person, leaderboard[0].Index, leaderboard[0].TotalScore, nil
 	} else {
-		nothing := Person{}
+		nothing := &Person{}
 		return nothing, 0, 0, fmt.Errorf("No more leaders here!")
 	}
 
 }
 
-func orderPeople() []Person {
+func orderPeople() []*Person {
 	var slice People
 	for _, k := range people {
 		slice = append(slice, k)
@@ -138,7 +138,7 @@ func orderPeople() []Person {
 	return slice
 }
 
-func personNotSelected(array []Person, p Person) bool {
+func personNotSelected(array []*Person, p *Person) bool {
 	for _, person := range array {
 		if p == person {
 			return false
@@ -147,7 +147,7 @@ func personNotSelected(array []Person, p Person) bool {
 	return true
 }
 
-func doesMatch(match Match, array []Person, p Person) bool {
+func doesMatch(match *Match, array []*Person, p *Person) bool {
 	if match.Match[0].Name == p.Name {
 		for _, person := range array {
 			if match.Match[1].Name == person.Name {
