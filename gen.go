@@ -73,7 +73,7 @@ func getTeams(teamSize int) []Team {
 				// If we're in the first row, we need to create the team first, and we put in the person with the higest
 				// score.
 				teams[j] = Team{
-					Members: []*Person{orderedPeople[0]},
+					Members: []Person{orderedPeople[0]},
 				}
 				orderedPeople = orderedPeople[1:]
 			} else {
@@ -94,7 +94,7 @@ func getTeams(teamSize int) []Team {
 	return teams
 }
 
-func getMatchingPerson(array []*Person, orderedPeople []*Person) (*Person, int, int, error) {
+func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int, error) {
 	var leaderboard Leaderboard
 	for k, p := range orderedPeople {
 		if personNotSelected(array, p) {

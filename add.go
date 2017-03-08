@@ -91,7 +91,8 @@ func addPerson(persName string, deptName string) (string, error) {
 			addToMatches(pers)
 			people = append(people, pers)
 
-			// fmt.Println(&pers)
+			// fmt.Println(pers)
+
 			// Save it all
 			err := persistLoad()
 			if err != nil {

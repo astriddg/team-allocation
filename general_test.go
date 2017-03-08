@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func BenchmarkAddDepartment(b *testing.B) {
 
@@ -25,7 +27,7 @@ func BenchmarkAddToMatches(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		addToMatches(&Person{
 			Name:       "hullo",
-			Department: departments[0],
+			Department: "foo",
 		})
 	}
 
@@ -57,35 +59,35 @@ func createData() []Team {
 	addDepartment("bar")
 	var teams = []Team{
 		{
-			Members: []*Person{
+			Members: []Person{
 				{
 					Name:       "hello",
-					Department: departments[0],
+					Department: "foo",
 				},
 				{
 					Name:       "goodbye",
-					Department: departments[0],
+					Department: "foo",
 				},
 				{
 					Name:       "Hiagain",
-					Department: departments[1],
+					Department: "bar",
 				},
 			},
 			Score: 0,
 		},
 		{
-			Members: []*Person{
+			Members: []Person{
 				{
 					Name:       "one",
-					Department: departments[1],
+					Department: "bar",
 				},
 				{
 					Name:       "two",
-					Department: departments[1],
+					Department: "bar",
 				},
 				{
 					Name:       "three",
-					Department: departments[0],
+					Department: "foo",
 				},
 			},
 			Score: 0,
@@ -104,7 +106,7 @@ func createData() []Team {
 
 func deleteData() {
 	for _, p := range people {
-		delPerson(p.Name, true)
+		delPerson(p.Name)
 	}
 	for _, d := range departments {
 		delDepartment(d.Name)
