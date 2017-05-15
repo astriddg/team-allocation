@@ -1,1 +1,0 @@
-[{"Name":"sigint","NumberPeople":7},{"Name":"tech","NumberPeople":10},{"Name":"it","NumberPeople":3},{"Name":"central","NumberPeople":4},{"Name":"sm","NumberPeople":7}]
