@@ -11,13 +11,22 @@ import (
 
 func (g gen) Action(line *liner.State, fields []string) error {
 
-	if len(fields) == 2 {
+	if len(fields) >= 2 {
 		teamSize, err := strconv.Atoi(fields[1])
 		if err != nil {
 			return err
 		}
 
-		teams := getTeams(teamSize)
+		var absentNames []string
+		if len(fields) > 2 {
+			if fields[2] == "-without" {
+				absentNames = fields[3:]
+			} else {
+				return fmt.Errorf("Are you sure you entered the right arguments?")
+			}
+		}
+
+		teams := getTeams(teamSize, absentNames)
 
 		fmt.Println(" ")
 		fmt.Println(" ")
@@ -55,9 +64,9 @@ func (g gen) Action(line *liner.State, fields []string) error {
 
 }
 
-func getTeams(teamSize int) []Team {
+func getTeams(teamSize int, absentees []string) []Team {
 	// Get a slice of all the people in the order of the person with the highest score first
-	orderedPeople := orderPeople()
+	orderedPeople := orderPeople(absentees)
 	sort.Sort(sort.Reverse(matches))
 
 	// Get the number of teams by dividing the number of people by team size.
@@ -127,10 +136,18 @@ func getMatchingPerson(array []Person, orderedPeople []Person) (Person, int, int
 
 }
 
-func orderPeople() []Person {
+func orderPeople(absentees []string) []Person {
 	var slice People
 	for _, k := range people {
-		slice = append(slice, k)
+		absent := false
+		for _, a := range absentees {
+			if k.Name == a {
+				absent = true
+			}
+		}
+		if absent == false {
+			slice = append(slice, k)
+		}
 	}
 
 	sort.Sort(sort.Reverse(slice))
