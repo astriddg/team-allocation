@@ -1,10 +1,6 @@
 package main
 
-import (
-	"encoding/json"
-	"io/ioutil"
-	"os"
-)
+import "encoding/json"
 
 func addToMatches(person *Person) {
 	for i, _ := range people {
@@ -50,24 +46,27 @@ func delFromMatches(person *Person) {
 }
 
 func persistLoad() error {
-	deptFile, err := json.Marshal(departments)
-
-	// Saving everything in files
-	err = ioutil.WriteFile(fileNames["departments"], deptFile, os.ModeType)
+	deptJson, err := json.Marshal(departments)
 	if err != nil {
 		return err
 	}
 
-	persFile, err := json.Marshal(people)
-
-	err = ioutil.WriteFile(fileNames["people"], persFile, os.ModeType)
+	// Saving everything in redis
+	err = client.Set("departments", deptJson, 0).Err()
 	if err != nil {
 		return err
 	}
 
-	matchFile, err := json.Marshal(matches)
+	peopleJson, err := json.Marshal(people)
 
-	err = ioutil.WriteFile(fileNames["matches"], matchFile, os.ModeType)
+	err = client.Set("people", peopleJson, 0).Err()
+	if err != nil {
+		return err
+	}
+
+	matchesJson, err := json.Marshal(matches)
+
+	err = client.Set("matches", matchesJson, 0).Err()
 	if err != nil {
 		return err
 	}

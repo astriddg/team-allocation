@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/peterh/liner"
+	"github.com/nlopes/slack"
 )
 
-func (a add) Action(line *liner.State, fields []string) error {
+func (a add) Action(rtm *slack.RTM, fields []string) error {
 
 	if fields[1] == "department" || fields[1] == "d" {
 
@@ -22,7 +22,7 @@ func (a add) Action(line *liner.State, fields []string) error {
 			if err != nil {
 				fmt.Println(err)
 			} else {
-				fmt.Println(message)
+				rtm.NewOutgoingMessage(message, "general")
 			}
 
 			return nil
@@ -40,15 +40,15 @@ func (a add) Action(line *liner.State, fields []string) error {
 			// Add a new person
 			message, err := addPerson(fields[2], fields[3])
 			if err != nil {
-				fmt.Println(err)
+				return fmt.Errorf(err)
 			} else {
-				fmt.Println(message)
+				rtm.NewOutgoingMessage(message, "general")
 			}
 
 		}
 
 	} else {
-		fmt.Println("Looks like you've got the wrong arguments here")
+		return fmt.Errorf("Looks like you've got the wrong arguments here")
 	}
 	return nil
 }

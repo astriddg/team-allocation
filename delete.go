@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/peterh/liner"
+	"github.com/nlopes/slack"
 )
 
-func (d del) Action(line *liner.State, fields []string) error {
+func (d del) Action(rtm *slack.RTM, fields []string) error {
 
 	if fields[1] == "department" || fields[1] == "d" {
 		if len(fields) < 3 {
@@ -17,9 +17,9 @@ func (d del) Action(line *liner.State, fields []string) error {
 			// Delete department
 			message, err := delDepartment(fields[2])
 			if err != nil {
-				fmt.Println(err)
+				return fmt.Errorf(err)
 			} else {
-				fmt.Println(message)
+				rtm.NewOutgoingMessage(message, "general")
 			}
 
 			return nil
@@ -33,9 +33,9 @@ func (d del) Action(line *liner.State, fields []string) error {
 			// Delete person
 			message, err := delPerson(fields[2], false)
 			if err != nil {
-				fmt.Println(err)
+				return fmt.Errorf(err)
 			} else {
-				fmt.Println(message)
+				rtm.NewOutgoingMessage(message, "general")
 			}
 
 		}

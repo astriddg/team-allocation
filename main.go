@@ -2,16 +2,21 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strings"
 
-	"github.com/peterh/liner"
+	"github.com/go-redis/redis"
+	"github.com/nlopes/slack"
 )
+
+// TODO: - mutex,
+// - message button,
+// 
 
 var (
 	people      = People{}
@@ -38,61 +43,47 @@ var fileNames = map[string]string{
 
 var words = []string{"add", "delete", "show", "gen", "person", "department", "people", "departments", "help"}
 
+var client *redis.Client
+var Me string
+
 func init() {
 
+	connectClient()
+
 	// Retrieve all the "tables"
-	err := getList(fileNames["people"], &people)
+	err := getList("people", &people)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = getList(fileNames["departments"], &departments)
+	err = getList("departments", &departments)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = getList(fileNames["matches"], &matches)
+	err = getList("matches", &matches)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	line = liner.NewLiner()
-
-	line.SetCompleter(func(line string) (c []string) {
-		for _, n := range words {
-			if strings.HasPrefix(n, strings.ToLower(line)) {
-				c = append(c, n)
-			}
-		}
-		return
-	})
-
-	if f, err := os.Open(history_fn); err == nil {
-		line.ReadHistory(f)
-		f.Close()
-	}
-
-	line.SetCtrlCAborts(true)
-
+	return
 }
 
 func main() {
-	defer line.Close()
 
-	quitCh := make(chan bool)
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "5000"
+	}
 
-	go func() {
-		for {
-			<-c
-			quitCh <- true
-		}
-	}()
+	http.HandleFunc("/", mainHandler)
 
-	fmt.Println("Hello you!")
+	// go handleRtm(rtm)
 
-	var lastExit = false
+	// for {
+	// 	time.Sleep(time.Second)
+	// }
+
+
 	for {
 		cmd, err := line.Prompt("What do you want to do?  --  ")
 
@@ -116,7 +107,7 @@ func main() {
 		}
 
 		// Execute each command
-		err = execute(line, cmd)
+		err = execute(, cmd)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -134,7 +125,50 @@ func main() {
 
 }
 
-func execute(line *liner.State, cmd string) error {
+func mainHandler(w http.ResponseWriter, r *http.Request) {
+
+	api := slack.New(os.Getenv("TA_SLACK_URL"))
+
+	list, _ := api.GetUsers()
+	for _, u := range list {
+		if u.Name == "team-allocation" {
+			Me = u.ID
+			break
+		}
+	}
+
+	rtm := api.NewRTM()
+
+	go rtm.ManageConnection()
+
+	token := os.Getenv("VERIF_TOKEN")
+
+	incomingToken := r.FormValue("token")
+
+	if token != incomingToken {
+		http.Error(w, "Wrong token", http.StatusBadRequest)
+	}
+
+	if r.FormValue("command") != "/team-allocation" {
+		http.Error(w, "Wrong command", http.StatusBadRequest)		
+	}
+
+	// Add a help
+
+	if r.FormValue("text") == "" {
+		http.Error(w, "No text", http.StatusBadRequest)
+	}
+
+	err := execute(rtm, r.FormValue("text"))
+
+	if err != nil {
+		//TO DO
+	}
+
+
+}
+
+func execute(rtm *slack.RTM, cmd string) error {
 	// Turn command string to slice
 	fields := strings.Fields(cmd)
 	firstarg := fields[0]
@@ -147,7 +181,7 @@ func execute(line *liner.State, cmd string) error {
 	command := cmds[firstarg]
 
 	// send to the right function
-	err := command.Action(line, fields)
+	err := command.Action(rtm, fields)
 	if err != nil {
 		return err
 	}
@@ -158,21 +192,25 @@ func execute(line *liner.State, cmd string) error {
 
 // Opens the right file and reads the bytes into a struct
 func getList(source string, v interface{}) error {
-	file, err := os.OpenFile(source, os.O_CREATE|os.O_RDWR, 0777)
-	defer file.Close()
-	if err != nil {
-		return err
-	}
-	bytes, err := ioutil.ReadAll(file)
+
+	value, err := client.Get(source).Bytes()
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(bytes, v)
+	err = json.Unmarshal(value, &source)
 	if err != nil {
 		return err
 	}
 
 	return nil
 
+}
+
+func connectClient() {
+	client = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
 }

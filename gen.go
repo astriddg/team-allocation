@@ -9,7 +9,7 @@ import (
 	"github.com/peterh/liner"
 )
 
-func (g gen) Action(line *liner.State, fields []string) error {
+func (g gen) Action(rtm, *slack.RTM, fields []string) error {
 
 	if len(fields) >= 2 {
 		teamSize, err := strconv.Atoi(fields[1])

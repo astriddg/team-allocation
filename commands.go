@@ -1,12 +1,9 @@
 package main
 
-import (
-	"github.com/peterh/liner"
-)
+import "github.com/nlopes/slack"
 
 type Command interface {
-
-	Action(line *liner.State, args []string) error
+	Action(rtm *slack.RTM, args []string) error
 }
 
 type add struct{}
@@ -18,4 +15,3 @@ type show struct{}
 type gen struct{}
 
 type help struct{}
-

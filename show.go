@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/peterh/liner"
+	"github.com/nlopes/slack"
 )
 
-func (s show) Action(line *liner.State, fields []string) error {
+func (s show) Action(rtm *slack.RTM, fields []string) error {
 
 	if len(fields) == 2 {
 		switch fields[1] {

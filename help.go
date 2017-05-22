@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/peterh/liner"
+	"github.com/nlopes/slack"
 )
 
-func (h help) Action(line *liner.State, fields []string) error {
+func (h help) Action(rtm *slack.RTM, fields []string) error {
 
 	helpMessage :=
 		` 
