@@ -1,10 +1,6 @@
 package main
 
-import (
-	"fmt"
-
-	"github.com/nlopes/slack"
-)
+import "github.com/nlopes/slack"
 
 func (h help) Action(rtm *slack.RTM, fields []string) error {
 
@@ -26,8 +22,7 @@ func (h help) Action(rtm *slack.RTM, fields []string) error {
         |    - delete [departmentName/personName] : deletes a department or a person.                      |
         |--------------------------------------------------------------------------------------------------|
         `
-
-	fmt.Println(helpMessage)
+	rtm.NewOutgoingMessage(helpMessage, "general")
 
 	return nil
 

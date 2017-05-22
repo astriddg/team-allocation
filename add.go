@@ -40,7 +40,7 @@ func (a add) Action(rtm *slack.RTM, fields []string) error {
 			// Add a new person
 			message, err := addPerson(fields[2], fields[3])
 			if err != nil {
-				return fmt.Errorf(err)
+				return err
 			} else {
 				rtm.NewOutgoingMessage(message, "general")
 			}

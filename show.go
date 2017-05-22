@@ -12,13 +12,13 @@ func (s show) Action(rtm *slack.RTM, fields []string) error {
 	if len(fields) == 2 {
 		switch fields[1] {
 		case "people":
-			showPeople()
+			showPeople(rtm)
 			return nil
 		case "departments":
-			showDepartment()
+			showDepartment(rtm)
 			return nil
 		case "matches":
-			showMatches()
+			showMatches(rtm)
 			return nil
 		default:
 			return fmt.Errorf("That's not a listable type..")
@@ -30,32 +30,35 @@ func (s show) Action(rtm *slack.RTM, fields []string) error {
 
 }
 
-func showMatches() {
+func showMatches(rtm *slack.RTM) {
 	sort.Sort(sort.Reverse(matches))
-	fmt.Println(" ")
+	showString := " \n"
 	for _, m := range matches {
-		fmt.Print(m.Match[0].Name)
-		fmt.Print(" ")
-		fmt.Print(m.Match[1].Name)
-		fmt.Print(" ")
-		fmt.Print(m.Score)
-		fmt.Println(" ")
-
+		showString += fmt.Sprintf("%s - %s : %v \n", m.Match[0].Name, m.Match[1].Name, m.Score)
 	}
+
+	rtm.NewOutgoingMessage(showString, "general")
+
 }
 
-func showPeople() {
-	fmt.Println(" ")
+func showPeople(rtm *slack.RTM) {
+	showString := " \n"
 	for _, p := range people {
-		fmt.Printf("%v: %v", p.Name, p.Score)
-		fmt.Println(" ")
+		showString += fmt.Sprintf("%s: %v \n", p.Name, p.Score)
 	}
+
+	rtm.NewOutgoingMessage(showString, "general")
+
 }
 
-func showDepartment() {
-	fmt.Println(" ")
+func showDepartment(rtm *slack.RTM) {
+	showString := " \n"
 	for _, d := range departments {
+		showString += fmt.Sprintf("%s: %v \n", d.Name, d.NumberPeople)
+
 		fmt.Printf("%v: %v", d.Name, d.NumberPeople)
 		fmt.Println(" ")
 	}
+
+	rtm.NewOutgoingMessage(showString, "general")
 }

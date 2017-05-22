@@ -17,7 +17,7 @@ func (d del) Action(rtm *slack.RTM, fields []string) error {
 			// Delete department
 			message, err := delDepartment(fields[2])
 			if err != nil {
-				return fmt.Errorf(err)
+				return err
 			} else {
 				rtm.NewOutgoingMessage(message, "general")
 			}
@@ -33,7 +33,7 @@ func (d del) Action(rtm *slack.RTM, fields []string) error {
 			// Delete person
 			message, err := delPerson(fields[2], false)
 			if err != nil {
-				return fmt.Errorf(err)
+				return err
 			} else {
 				rtm.NewOutgoingMessage(message, "general")
 			}

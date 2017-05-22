@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/peterh/liner"
+	"github.com/nlopes/slack"
 )
 
-func (g gen) Action(rtm, *slack.RTM, fields []string) error {
+func (g gen) Action(rtm *slack.RTM, fields []string) error {
 
 	if len(fields) >= 2 {
 		teamSize, err := strconv.Atoi(fields[1])
@@ -26,36 +26,51 @@ func (g gen) Action(rtm, *slack.RTM, fields []string) error {
 			}
 		}
 
+		mutex.Lock()
+		defer mutex.Unlock()
 		teams := getTeams(teamSize, absentNames)
 
-		fmt.Println(" ")
-		fmt.Println(" ")
-		fmt.Println(" ")
-		fmt.Println(" ")
-		fmt.Println(" ")
-		fmt.Println("Here are the teams as generated, do you like them? ")
-		fmt.Println(" ")
-		for _, v := range teams {
-			fmt.Println(" ")
-			fmt.Print("[ ")
-			for _, m := range v.Members {
-				fmt.Print(m.Name)
-				fmt.Print("  ")
-			}
-			fmt.Print("] ")
-			fmt.Print(v.Score)
-			fmt.Println(" ")
+		teamString := "Here are the teams as generated, do you like them?  \n"
 
+		for _, v := range teams {
+			teamString += fmt.Sprintf(" \n [ ")
+			for _, m := range v.Members {
+				teamString += fmt.Sprintf("%s ", m.Name)
+			}
+			teamString += fmt.Sprintf(" ] %v \n", v.Score)
 		}
+
+		// TODO: generate callback id
+
+		// attachment := slack.Attachment{
+		// 	Text:       "Do you like them? Shall I persist them? ",
+		// 	Fallback:   "Looks like you don't have a choice",
+		// 	CallbackID: "",
+		// 	Actions: []slack.AttachmentAction{
+		// 		{
+		// 			Name:  "answer",
+		// 			Text:  "Yes",
+		// 			Type:  "button",
+		// 			Value: "yes",
+		// 		},
+		// 		{
+		// 			Name:  "answer",
+		// 			Text:  "No",
+		// 			Type:  "button",
+		// 			Value: "no",
+		// 		},
+		// 	},
+		// }
+
+		// params := slack.PostMessageParameters{
+		// 	Attachments: []slack.Attachment{attachment},
+		// }
+
+		// rtm.PostMessage("general", teamString, params)
+
+		rtm.NewOutgoingMessage("general", teamString)
 		fmt.Println(" ")
-		check, err := line.Prompt("Do you like them? Shall I persist them? ")
-		if err != nil {
-			return fmt.Errorf("something went wrong here: %v", err)
-		}
-		if check == "yes" || check == "YES" || check == "Yes" || check == "yess" || check == "yes!" {
-			fmt.Println("thanks!")
-			persistTeams(teams)
-		}
+		persistTeams(teams)
 
 		return nil
 

@@ -2,21 +2,21 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
 	"fmt"
-	"log"
+	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/go-redis/redis"
 	"github.com/nlopes/slack"
+	"github.com/peterh/liner"
 )
 
 // TODO: - mutex,
 // - message button,
-// 
+//
 
 var (
 	people      = People{}
@@ -32,6 +32,9 @@ var (
 		"help":   help{},
 	}
 	history_fn = filepath.Join(os.TempDir(), ".liner_example_history")
+	client     *redis.Client
+	Me         string
+	mutex      = sync.Mutex{}
 )
 
 // List of files to source
@@ -42,9 +45,6 @@ var fileNames = map[string]string{
 }
 
 var words = []string{"add", "delete", "show", "gen", "person", "department", "people", "departments", "help"}
-
-var client *redis.Client
-var Me string
 
 func init() {
 
@@ -83,46 +83,6 @@ func main() {
 	// 	time.Sleep(time.Second)
 	// }
 
-
-	for {
-		cmd, err := line.Prompt("What do you want to do?  --  ")
-
-		if err != nil && err.Error() == "EOF" {
-			fmt.Println("bye!")
-			return
-		} else if err == liner.ErrPromptAborted {
-			if lastExit {
-				return
-			} else {
-				lastExit = true
-				continue
-			}
-		} else if err != nil {
-			fmt.Println("Au revoir!")
-			panic(err)
-		}
-
-		if cmd == "" {
-			continue
-		}
-
-		// Execute each command
-		err = execute(, cmd)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		if f, err := os.Create(history_fn); err != nil {
-			log.Print("Error writing history file: ", err)
-		} else {
-			line.WriteHistory(f)
-			f.Close()
-		}
-
-		lastExit = false
-
-	}
-
 }
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +110,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.FormValue("command") != "/team-allocation" {
-		http.Error(w, "Wrong command", http.StatusBadRequest)		
+		http.Error(w, "Wrong command", http.StatusBadRequest)
 	}
 
 	// Add a help
@@ -164,7 +124,6 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//TO DO
 	}
-
 
 }
 
