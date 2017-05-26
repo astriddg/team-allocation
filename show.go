@@ -3,22 +3,20 @@ package main
 import (
 	"fmt"
 	"sort"
-
-	"github.com/nlopes/slack"
 )
 
-func (s show) Action(rtm *slack.RTM, fields []string) error {
+func (s show) Action(fields []string) error {
 
 	if len(fields) == 2 {
 		switch fields[1] {
 		case "people":
-			showPeople(rtm)
+			showPeople()
 			return nil
 		case "departments":
-			showDepartment(rtm)
+			showDepartment()
 			return nil
 		case "matches":
-			showMatches(rtm)
+			showMatches()
 			return nil
 		default:
 			return fmt.Errorf("That's not a listable type..")
@@ -30,35 +28,35 @@ func (s show) Action(rtm *slack.RTM, fields []string) error {
 
 }
 
-func showMatches(rtm *slack.RTM) {
-	sort.Sort(sort.Reverse(matches))
+func showMatches() {
+	sort.Sort(sort.Reverse(data.Matches))
 	showString := " \n"
-	for _, m := range matches {
+	for _, m := range data.Matches {
 		showString += fmt.Sprintf("%s - %s : %v \n", m.Match[0].Name, m.Match[1].Name, m.Score)
 	}
 
-	rtm.NewOutgoingMessage(showString, "general")
+	data.RTM.NewOutgoingMessage(showString, "general")
 
 }
 
-func showPeople(rtm *slack.RTM) {
+func showPeople() {
 	showString := " \n"
-	for _, p := range people {
+	for _, p := range data.People {
 		showString += fmt.Sprintf("%s: %v \n", p.Name, p.Score)
 	}
 
-	rtm.NewOutgoingMessage(showString, "general")
+	data.RTM.NewOutgoingMessage(showString, "general")
 
 }
 
-func showDepartment(rtm *slack.RTM) {
+func showDepartment() {
 	showString := " \n"
-	for _, d := range departments {
+	for _, d := range data.Departments {
 		showString += fmt.Sprintf("%s: %v \n", d.Name, d.NumberPeople)
 
 		fmt.Printf("%v: %v", d.Name, d.NumberPeople)
 		fmt.Println(" ")
 	}
 
-	rtm.NewOutgoingMessage(showString, "general")
+	data.RTM.NewOutgoingMessage(showString, "general")
 }

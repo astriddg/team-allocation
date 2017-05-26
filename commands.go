@@ -1,9 +1,8 @@
 package main
 
-import "github.com/nlopes/slack"
 
 type Command interface {
-	Action(rtm *slack.RTM, args []string) error
+	Action(args []string) error
 }
 
 type add struct{}

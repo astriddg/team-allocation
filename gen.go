@@ -7,12 +7,14 @@ import (
 	"strconv"
 
 	"github.com/nlopes/slack"
+
+	"time"
 )
 
-func (g gen) Action(rtm *slack.RTM, fields []string) error {
+func (g gen) Action(fields []string) error {
 
 	if len(fields) >= 2 {
-		teamSize, err := strconv.Atoi(fields[1])
+		teamsize, err := strconv.Atoi(fields[1])
 		if err != nil {
 			return err
 		}
@@ -26,13 +28,11 @@ func (g gen) Action(rtm *slack.RTM, fields []string) error {
 			}
 		}
 
-		mutex.Lock()
-		defer mutex.Unlock()
-		teams := getTeams(teamSize, absentNames)
+		data.Teams = getTeams(teamsize, absentNames)
 
 		teamString := "Here are the teams as generated, do you like them?  \n"
 
-		for _, v := range teams {
+		for _, v := range data.Teams {
 			teamString += fmt.Sprintf(" \n [ ")
 			for _, m := range v.Members {
 				teamString += fmt.Sprintf("%s ", m.Name)
@@ -42,35 +42,38 @@ func (g gen) Action(rtm *slack.RTM, fields []string) error {
 
 		// TODO: generate callback id
 
-		// attachment := slack.Attachment{
-		// 	Text:       "Do you like them? Shall I persist them? ",
-		// 	Fallback:   "Looks like you don't have a choice",
-		// 	CallbackID: "",
-		// 	Actions: []slack.AttachmentAction{
-		// 		{
-		// 			Name:  "answer",
-		// 			Text:  "Yes",
-		// 			Type:  "button",
-		// 			Value: "yes",
-		// 		},
-		// 		{
-		// 			Name:  "answer",
-		// 			Text:  "No",
-		// 			Type:  "button",
-		// 			Value: "no",
-		// 		},
-		// 	},
-		// }
+		attachment := slack.Attachment{
+			Text:       "Do you like them? Shall I persist them? ",
+			Fallback:   "Looks like you don't have a choice",
+			CallbackID: "",
+			Actions: []slack.AttachmentAction{
+				{
+					Name:  "answer",
+					Text:  "Yes",
+					Type:  "button",
+					Value: "yes",
+				},
+				{
+					Name:  "answer",
+					Text:  "No",
+					Type:  "button",
+					Value: "no",
+				},
+			},
+		}
 
-		// params := slack.PostMessageParameters{
-		// 	Attachments: []slack.Attachment{attachment},
-		// }
+		params := slack.PostMessageParameters{
+			Attachments: []slack.Attachment{attachment},
+		}
 
-		// rtm.PostMessage("general", teamString, params)
+		data.Locked = true
+		data.RTM.PostMessage("general", teamString, params)
 
-		rtm.NewOutgoingMessage("general", teamString)
-		fmt.Println(" ")
-		persistTeams(teams)
+		data.RTM.NewOutgoingMessage("general", teamString)
+
+		time.Sleep(time.Minute * 5)
+
+		data.Locked = false
 
 		return nil
 
@@ -82,7 +85,7 @@ func (g gen) Action(rtm *slack.RTM, fields []string) error {
 func getTeams(teamSize int, absentees []string) []Team {
 	// Get a slice of all the people in the order of the person with the highest score first
 	orderedPeople := orderPeople(absentees)
-	sort.Sort(sort.Reverse(matches))
+	sort.Sort(sort.Reverse(data.Matches))
 
 	// Get the number of teams by dividing the number of people by team size.
 	teamNumber := int(math.Ceil(float64(len(orderedPeople)) / float64(teamSize)))
@@ -123,7 +126,7 @@ func getMatchingPerson(array []*Person, orderedPeople []*Person) (*Person, int, 
 	for k, p := range orderedPeople {
 		if personNotSelected(array, p) {
 			var personTotal int
-			for _, m := range matches {
+			for _, m := range data.Matches {
 				if doesMatch(m, array, p) {
 					personTotal = m.Score
 					if m.Match[0].Department == m.Match[0].Department {
@@ -153,7 +156,7 @@ func getMatchingPerson(array []*Person, orderedPeople []*Person) (*Person, int, 
 
 func orderPeople(absentees []string) []*Person {
 	var slice People
-	for _, k := range people {
+	for _, k := range data.People {
 		absent := false
 		for _, a := range absentees {
 			if k.Name == a {

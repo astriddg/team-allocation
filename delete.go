@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/nlopes/slack"
 )
 
-func (d del) Action(rtm *slack.RTM, fields []string) error {
+func (d del) Action(fields []string) error {
 
 	if fields[1] == "department" || fields[1] == "d" {
 		if len(fields) < 3 {
@@ -19,7 +17,7 @@ func (d del) Action(rtm *slack.RTM, fields []string) error {
 			if err != nil {
 				return err
 			} else {
-				rtm.NewOutgoingMessage(message, "general")
+				data.RTM.NewOutgoingMessage(message, "general")
 			}
 
 			return nil
@@ -35,7 +33,7 @@ func (d del) Action(rtm *slack.RTM, fields []string) error {
 			if err != nil {
 				return err
 			} else {
-				rtm.NewOutgoingMessage(message, "general")
+				data.RTM.NewOutgoingMessage(message, "general")
 			}
 
 		}
@@ -49,7 +47,7 @@ func delDepartment(deptName string) (string, error) {
 	if dept, ok := departmentExists(deptName); ok {
 
 		// deleting first anyone from that department
-		for _, v := range people {
+		for _, v := range data.People {
 			if v.Department == dept {
 				// true: the department will be deleted
 				delPerson(v.Name, true)
@@ -57,9 +55,9 @@ func delDepartment(deptName string) (string, error) {
 		}
 
 		// then deleting department
-		for k, d := range departments {
+		for k, d := range data.Departments {
 			if d.Name == deptName {
-				departments = append(departments[:k], departments[k+1:]...)
+				data.Departments = append(data.Departments[:k], data.Departments[k+1:]...)
 			}
 		}
 
@@ -78,14 +76,14 @@ func delDepartment(deptName string) (string, error) {
 func delPerson(persName string, deleteDept bool) (string, error) {
 	if _, ok := personExists(persName); ok {
 
-		for k, p := range people {
+		for k, p := range data.People {
 			if p.Name == persName {
 				// Reduce the number of people in that department
 				if !deleteDept {
 					p.Department.NumberPeople--
 				}
 
-				people = append(people[:k], people[k+1:]...)
+				data.People = append(data.People[:k], data.People[k+1:]...)
 				// The person also has to be deleted from the matches list.
 				delFromMatches(p)
 

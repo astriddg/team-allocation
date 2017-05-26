@@ -3,10 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/nlopes/slack"
 )
 
-func (a add) Action(rtm *slack.RTM, fields []string) error {
+func (a add) Action(fields []string) error {
 
 	if fields[1] == "department" || fields[1] == "d" {
 
@@ -22,7 +21,7 @@ func (a add) Action(rtm *slack.RTM, fields []string) error {
 			if err != nil {
 				fmt.Println(err)
 			} else {
-				rtm.NewOutgoingMessage(message, "general")
+				data.RTM.NewOutgoingMessage(message, "general")
 			}
 
 			return nil
@@ -42,7 +41,7 @@ func (a add) Action(rtm *slack.RTM, fields []string) error {
 			if err != nil {
 				return err
 			} else {
-				rtm.NewOutgoingMessage(message, "general")
+				data.RTM.NewOutgoingMessage(message, "general")
 			}
 
 		}
@@ -62,7 +61,7 @@ func addDepartment(deptName string) (string, error) {
 			NumberPeople: 0,
 		}
 		// Add to the list
-		departments = append(departments, dept)
+		data.Departments = append(data.Departments, dept)
 
 		// then persist the whole thing
 		err := persistLoad()
@@ -89,7 +88,7 @@ func addPerson(persName string, deptName string) (string, error) {
 
 			// You want a "match" to be created between this new person and all of the others.
 			addToMatches(pers)
-			people = append(people, pers)
+			data.People = append(data.People, pers)
 
 			// fmt.Println(&pers)
 			// Save it all
@@ -109,7 +108,7 @@ func addPerson(persName string, deptName string) (string, error) {
 }
 
 func departmentExists(name string) (*Department, bool) {
-	for _, dept := range departments {
+	for _, dept := range data.Departments {
 		if dept.Name == name {
 			return dept, true
 		}
@@ -118,7 +117,7 @@ func departmentExists(name string) (*Department, bool) {
 }
 
 func personExists(name string) (*Person, bool) {
-	for _, pers := range people {
+	for _, pers := range data.People {
 		if pers.Name == name {
 			return pers, true
 		}

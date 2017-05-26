@@ -3,65 +3,58 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/go-redis/redis"
 	"github.com/nlopes/slack"
-	"github.com/peterh/liner"
 )
 
 // TODO: - mutex,
-// - message button,
-//
+// - handle errors
+// - generate single cid
 
-var (
-	people      = People{}
-	departments = []*Department{}
-	teams       = []*Team{}
-	matches     Matches
-	line        *liner.State
-	cmds        = map[string]Command{
-		"add":    add{},
-		"delete": del{},
-		"show":   show{},
-		"gen":    gen{},
-		"help":   help{},
-	}
-	history_fn = filepath.Join(os.TempDir(), ".liner_example_history")
-	client     *redis.Client
-	Me         string
-	mutex      = sync.Mutex{}
-)
-
-// List of files to source
-var fileNames = map[string]string{
-	"people":      "src/people.txt",
-	"departments": "src/departments.txt",
-	"matches":     "src/matches.txt",
+var cmds = map[string]Command{
+	"add":    add{},
+	"delete": del{},
+	"show":   show{},
+	"gen":    gen{},
+	"help":   help{},
 }
 
-var words = []string{"add", "delete", "show", "gen", "person", "department", "people", "departments", "help"}
+type Data struct {
+	People
+	Departments []*Department
+	Teams       []Team
+	Matches     Matches
+	Client      *redis.Client
+	Me          string
+	Locked      bool
+	RTM         *slack.RTM
+	CallbackId  string
+	Fields      []string
+}
+
+var data = Data{}
 
 func init() {
 
 	connectClient()
 
 	// Retrieve all the "tables"
-	err := getList("people", &people)
+	err := getList("people", data.People)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = getList("departments", &departments)
+	err = getList("departments", data.Departments)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	err = getList("matches", &matches)
+	err = getList("matches", data.Matches)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -76,6 +69,8 @@ func main() {
 	}
 
 	http.HandleFunc("/", mainHandler)
+
+	http.HandleFunc("/resp", responseHandler)
 
 	// go handleRtm(rtm)
 
@@ -92,14 +87,13 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	list, _ := api.GetUsers()
 	for _, u := range list {
 		if u.Name == "team-allocation" {
-			Me = u.ID
+			data.Me = u.ID
 			break
 		}
 	}
+	data.RTM = api.NewRTM()
 
-	rtm := api.NewRTM()
-
-	go rtm.ManageConnection()
+	go data.RTM.ManageConnection()
 
 	token := os.Getenv("VERIF_TOKEN")
 
@@ -119,18 +113,18 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No text", http.StatusBadRequest)
 	}
 
-	err := execute(rtm, r.FormValue("text"))
+	err := data.execute(r.FormValue("text"))
 
 	if err != nil {
-		//TO DO
+		// TODO
 	}
 
 }
 
-func execute(rtm *slack.RTM, cmd string) error {
+func (d *Data) execute(cmd string) error {
 	// Turn command string to slice
-	fields := strings.Fields(cmd)
-	firstarg := fields[0]
+	data.Fields = strings.Fields(cmd)
+	firstarg := data.Fields[0]
 
 	if _, in := cmds[firstarg]; !in {
 		return fmt.Errorf("Oops, command doesn't exist")
@@ -140,7 +134,7 @@ func execute(rtm *slack.RTM, cmd string) error {
 	command := cmds[firstarg]
 
 	// send to the right function
-	err := command.Action(rtm, fields)
+	err := command.Action(data.Fields)
 	if err != nil {
 		return err
 	}
@@ -152,7 +146,7 @@ func execute(rtm *slack.RTM, cmd string) error {
 // Opens the right file and reads the bytes into a struct
 func getList(source string, v interface{}) error {
 
-	value, err := client.Get(source).Bytes()
+	value, err := data.Client.Get(source).Bytes()
 	if err != nil {
 		return err
 	}
@@ -167,9 +161,57 @@ func getList(source string, v interface{}) error {
 }
 
 func connectClient() {
-	client = redis.NewClient(&redis.Options{
+	data.Client = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
 	})
+}
+
+func responseHandler(w http.ResponseWriter, r *http.Request) {
+
+	api := slack.New(os.Getenv("TA_SLACK_URL"))
+
+	data.RTM = api.NewRTM()
+
+	go data.RTM.ManageConnection()
+
+	token := os.Getenv("VERIF_TOKEN")
+
+	incomingToken := r.FormValue("token")
+
+	if token != incomingToken {
+		http.Error(w, "Wrong token", http.StatusBadRequest)
+	}
+
+	// TODO: check it's called that
+	if r.FormValue("callback_id") != data.CallbackId {
+		http.Error(w, "Wrong command", http.StatusBadRequest)
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		//TODO
+	}
+
+	response := &ButtonResponse{}
+
+	err = json.Unmarshal(body, response)
+	if err != nil {
+		//TODO
+	}
+
+	if response.Actions[0].Value == "yes" {
+		if data.Locked == true {
+			persistTeams(data.Teams)
+			data.RTM.NewOutgoingMessage("Then that's your team!", "general")
+			data.Locked = false
+		}
+	} else if response.Actions[0].Value == "no" {
+		persistTeams(data.Teams)
+		cmds["gen"].Action(data.Fields)
+	}
+
+	r.Body.Close()
+
 }

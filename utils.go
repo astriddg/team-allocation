@@ -2,9 +2,20 @@ package main
 
 import "encoding/json"
 
+type ButtonResponse struct {
+	CallbackId string   `json:"callback_id"`
+	Token      string   `json:"token"`
+	Actions    []Action `json"actions"`
+}
+
+type Action struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
 func addToMatches(person *Person) {
-	for i, _ := range people {
-		p := people[i]
+	for i, _ := range data.People {
+		p := data.People[i]
 		match := &Match{
 			Match: [2]*Person{p, person},
 		}
@@ -13,29 +24,29 @@ func addToMatches(person *Person) {
 		} else {
 			match.Score = 0
 		}
-		people[i].Score = p.Score + match.Score
+		data.People[i].Score = p.Score + match.Score
 		person.Score = person.Score + match.Score
 
-		matches = append(matches, match)
+		data.Matches = append(data.Matches, match)
 
 	}
 }
 
 func delFromMatches(person *Person) {
-	if len(matches) != 0 {
+	if len(data.Matches) != 0 {
 		var delMatch Matches
-		for _, m := range matches {
+		for _, m := range data.Matches {
 			// If the first or the second person in the match is the given person.
 			if m.Match[0].Name == person.Name || m.Match[1].Name == person.Name {
 				delMatch = append(delMatch, m)
 			}
 		}
 
-		for i := 0; i < len(matches); i++ {
-			match := matches[i]
+		for i := 0; i < len(data.Matches); i++ {
+			match := data.Matches[i]
 			for _, d := range delMatch {
 				if match == d {
-					matches = append(matches[:i], matches[i+1:]...)
+					data.Matches = append(data.Matches[:i], data.Matches[i+1:]...)
 					i-- // Important: decrease index
 					break
 				}
@@ -46,27 +57,27 @@ func delFromMatches(person *Person) {
 }
 
 func persistLoad() error {
-	deptJson, err := json.Marshal(departments)
+	deptJson, err := json.Marshal(data.Departments)
 	if err != nil {
 		return err
 	}
 
 	// Saving everything in redis
-	err = client.Set("departments", deptJson, 0).Err()
+	err = data.Client.Set("departments", deptJson, 0).Err()
 	if err != nil {
 		return err
 	}
 
-	peopleJson, err := json.Marshal(people)
+	peopleJson, err := json.Marshal(data.People)
 
-	err = client.Set("people", peopleJson, 0).Err()
+	err = data.Client.Set("people", peopleJson, 0).Err()
 	if err != nil {
 		return err
 	}
 
-	matchesJson, err := json.Marshal(matches)
+	matchesJson, err := json.Marshal(data.Matches)
 
-	err = client.Set("matches", matchesJson, 0).Err()
+	err = data.Client.Set("matches", matchesJson, 0).Err()
 	if err != nil {
 		return err
 	}
@@ -100,10 +111,10 @@ func persistTeams(teams []Team) {
 }
 
 func getMatch(firstName string, secondName string) *Match {
-	for i := 0; i < len(matches); i++ {
-		if (matches[i].Match[0].Name == firstName && matches[i].Match[1].Name == secondName) ||
-			(matches[i].Match[1].Name == firstName && matches[i].Match[0].Name == secondName) {
-			return matches[i]
+	for i := 0; i < len(data.Matches); i++ {
+		if (data.Matches[i].Match[0].Name == firstName && data.Matches[i].Match[1].Name == secondName) ||
+			(data.Matches[i].Match[1].Name == firstName && data.Matches[i].Match[0].Name == secondName) {
+			return data.Matches[i]
 		}
 	}
 	return &Match{}
