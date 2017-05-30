@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/nlopes/slack"
+	uuid "github.com/nu7hatch/gouuid"
 
 	"time"
 )
@@ -40,12 +41,15 @@ func (g gen) Action(fields []string) error {
 			teamString += fmt.Sprintf(" ] %v \n", v.Score)
 		}
 
-		// TODO: generate callback id
+		data.CallbackId, err = uuid.NewV4()
+		if err != nil {
+			return err
+		}
 
 		attachment := slack.Attachment{
 			Text:       "Do you like them? Shall I persist them? ",
 			Fallback:   "Looks like you don't have a choice",
-			CallbackID: "",
+			CallbackID: data.CallbackId,
 			Actions: []slack.AttachmentAction{
 				{
 					Name:  "answer",
