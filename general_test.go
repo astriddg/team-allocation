@@ -48,7 +48,7 @@ func BenchmarkGetTeams(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		createData()
-		getTeams(3)
+		getTeams(3, []string{"hello"})
 		deleteData()
 	}
 
